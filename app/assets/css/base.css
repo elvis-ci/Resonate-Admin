@@ -1,0 +1,350 @@
+@import 'tailwindcss';
+
+:root[data-theme='light'] {
+  --safe-bottom: env(safe-area-inset-bottom);
+  @theme {
+    --color-bg: #ffff;
+    --color-alt-bg: #f9fafb;
+
+    --color-primary: #a05a00;
+    --color-primary-hover: #e67e00;
+
+    --color-secondary: #ffff;
+    --color-secondary-hover: #1a1f2e;
+
+    --color-alternate: #1a1f2e;
+    --color-alternate-hover: #1a1f2e;
+
+    --color-card-bg: #ffffff;
+    --color-card-bg2: #f9fafb;
+    --color-card-border: #e6eef4;
+
+    --color-border: #e6eef4;
+    --color-ribbon-bg: #1a1f2e;
+    --color-ribbon-under: #e67e00;
+
+    --color-text: #334155;
+    --color-heading: #334155;
+    --color-body: #4b5563;
+    --color-muted: #64748b;
+    --color-primary-text: #a05a00;
+    --color-secondary-text: #a05a00;
+
+    --color-success: #059669;
+    --color-warning: #dc2626;
+    --color-danger: #dc2626;
+
+    --color-link: var(--color-primary);
+    --shadow-elev: 0 6px 18px rgba(15, 23, 42, 0.06);
+    --logo-filter: none
+  }
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #0f172a;
+  --color-alt-bg: #111827;
+
+  --color-card-bg: #111827;
+  --color-card-bg2: #1f2933;
+
+  --color-primary: #a05a00;
+  --color-primary-hover: #e67e00;
+
+  --color-secondary: #e5e7eb;
+  --color-secondary-hover: #f9fafb;
+
+  --color-alternate: #020617;
+  --color-alternate-hover: #020617;
+
+  --color-border: #1e293b;
+  --color-card-border: #1e293b;
+
+  --color-ribbon-bg: #a05a00;
+  --color-ribbon-under: gray;
+
+  --color-text: #e5e7eb;
+  --color-heading: #f9fafb;
+  --color-body: #cbd5e1;
+  --color-muted: #94a3b8;
+  --color-primary-text: #e67e00;
+  --color-secondary-text: #e5e7eb;
+
+  --color-success: #10b981;
+  --color-warning: #f87171;
+  --color-danger: #ef4444;
+
+  --color-link: var(--color-primary);
+  --logo-filter: invert(1);
+}
+
+/* @media (prefers-color-scheme: dark) {
+  @theme {
+    --color-bg: #0f172a;
+    --color-alt-bg: #111827;
+
+    --color-card-bg: #111827;
+    --color-card-bg2: #1f2933;
+
+    --color-primary: #a05a00;
+    --color-primary-hover: #e67e00;
+
+    --color-secondary: #e5e7eb;
+    --color-secondary-hover: #f9fafb;
+
+    --color-alternate: #020617;
+    --color-alternate-hover: #020617;
+
+    --color-border: #1e293b;
+    --color-card-border: #1e293b;
+
+    --color-ribbon-bg: #a05a00;
+    --color-ribbon-under: gray;
+
+    --color-text: #e5e7eb;
+    --color-heading: #f9fafb;
+    --color-body: #cbd5e1;
+    --color-muted: #94a3b8;
+    --color-primary-text: #e67e00;
+    --color-secondary-text: #e5e7eb;
+
+    --color-success: #10b981;
+    --color-warning: #f87171;
+    --color-danger: #ef4444;
+
+    --color-link: var(--color-primary);
+  }
+
+  :root {
+    color-scheme: dark;
+  }
+} */
+
+@media (prefers-reduced-motion: reduce) {
+  html, body {
+    transition: none !important;
+  }
+  
+  *, *::before, *::after {
+    animation: none !important;
+  }
+}
+
+@font-face {
+  font-family: 'Nunito';
+  src: url('/fonts/Nunito-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family:
+    'Nunito',
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Arial,
+    sans-serif;
+  font-size-adjust: 0.5;
+  background-color: var(--color-bg);
+  min-height: 100dvh;
+  padding-bottom: env(safe-area-inset-bottom);
+
+}
+*{
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.logo{
+  filter: var(--logo-filter)
+}
+main {
+  @apply flex-1  pb-[env(safe-area-inset-bottom)];
+}
+
+/* nav */
+#topnav {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* #topnav.nav-sticky {
+  @apply bg-white shadow-md;
+} */
+
+nav li a {
+  @apply font-semibold;
+}
+
+/* Top-level links */
+nav > ul > li > a.router-link-active,
+nav > ul > li > div > a.router-link-active {
+  @apply text-primary-hover font-bold;
+}
+
+nav > ul > li > ul > li > a.router-link-active {
+  @apply text-primary-hover font-bold;
+}
+
+nav > ul > li > ul > li > a {
+  @apply text-text/80;
+}
+
+/* Hover styles for submenu links ONLY if parent is NOT active */
+nav > ul > li:not(.router-link-active) > ul > li > a:hover {
+  @apply text-primary;
+}
+
+/* Hover top-level link (if not active) */
+.group:hover > a:not(.router-link-active) {
+  @apply text-primary;
+}
+
+nav > ul > li :focus-within > a:not(.router-link-exact-active),
+nav > ul > li:focus-within {
+  @apply text-primary-hover;
+}
+/* nav end */
+
+section.heading {
+  @apply py-10 sm:py-16 md:py-20;
+}
+/* section */
+section.hero {
+  @apply relative my-0 py-0 w-full h-[70dvh] lg:h-full xl:h-[100dvh] text-white;
+}
+
+/* fixes max width on section content */
+section div.container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20;
+}
+/* section end */
+
+/* headings */
+.main-heading {
+  @apply text-3xl sm:text-4xl md:text-6xl font-bold;
+}
+
+h2 {
+  @apply text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-heading;
+}
+
+h2.white {
+  @apply text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-white;
+}
+
+h3 {
+  @apply text-xl sm:text-2xl md:text-2xl font-semibold text-heading;
+}
+h3.white {
+  @apply text-xl sm:text-2xl md:text-2xl font-semibold text-white/80;
+}
+/* headings end */
+
+/* paragraphs */
+p:not(.error):not(.white):not(.tight) {
+  @apply text-base md:text-base lg:text-xl leading-relaxed text-body mb-4;
+}
+p.tight {
+  @apply text-base md:text-base lg:text-xl leading-relaxed text-body mb-0;
+}
+p.primary {
+  @apply text-base md:text-base lg:text-xl leading-relaxed text-primary mb-4;
+}
+p.error {
+  @apply text-sm sm:text-base md:text-base lg:text-xl leading-relaxed mb-4;
+}
+p.white {
+  @apply text-base md:text-base lg:text-xl leading-relaxed text-white/90;
+}
+a.white {
+  @apply bg-gradient-to-r from-primary-hover via-white to-primary-hover
+
+         bg-clip-text text-transparent 
+         text-xl leading-relaxed;
+}
+
+/* paragraphs end */
+
+/* Buttons */
+/* Primary Button */
+button.primary {
+  @apply px-4 sm:px-5 md:px-6 lg:px-8 py-2 text-base sm:text-base md:text-base lg:text-base font-bold bg-primary text-white rounded-lg hover:bg-primary-hover focus:bg-primary-hover transition-colors duration-200 active:scale-95;
+}
+a.primary {
+  @apply px-4 sm:px-5 md:px-6 lg:px-8 py-2 text-base sm:text-base md:text-base lg:text-lg font-bold bg-primary text-secondary rounded-lg hover:bg-primary-hover focus:bg-primary-hover transition-colors duration-200 active:scale-95;
+}
+
+/* Secondary Button */
+button.secondary {
+  @apply px-4 sm:px-5 md:px-6 lg:px-8 py-2  text-base sm:text-base md:text-base lg:text-base font-bold  border-[1.5px] border-primary text-primary rounded-lg hover:bg-primary-hover/30 focus:bg-primary-hover/30  transition-opacity duration-200 active:scale-95;
+}
+a.secondary {
+  @apply px-4 sm:px-5 md:px-6 lg:px-8 py-2 text-base sm:text-base md:text-base lg:text-base font-bold bg-primary/0 border-[1.5px] border-primary text-secondary-text 
+  rounded-lg hover:bg-primary-hover/30 focus:bg-primary-hover/30  transition-opacity duration-200 active:scale-95;
+}
+
+button.cancel {
+  @apply px-4 sm:px-5 md:px-6 lg:px-8 py-2 text-base sm:text-base md:text-base lg:text-base font-bold bg-red-600 text-white rounded-lg hover:bg-red-700 focus:bg-red-700 transition-colors duration-200 active:scale-95;
+}
+input,
+textarea {
+  @apply px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary text-text;
+}
+/* Extras */
+/* Ribbon wrapper */
+.ribbon {
+  position: absolute;
+  top: -5px;
+  right: -7px;
+  width: 85px;
+  height: 75px;
+  overflow: hidden;
+}
+
+.ribbon span {
+  position: absolute;
+  display: block;
+  width: 100px;
+  padding: 5px 0;
+  background-color: var(--color-ribbon-bg);
+  color: #fff;
+  text-align: center;
+  letter-spacing: 1px;
+  font-size: 13px;
+  font-weight: bolder;
+  text-transform: uppercase;
+  top: 9px;
+  right: -24px;
+  transform: rotate(45deg);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Folded corners */
+.ribbon span:before,
+.ribbon span:after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  border: 4px solid transparent;
+  z-index: -1;
+}
+
+.ribbon span:before {
+  left: 0;
+  border-left-color: var(--color-ribbon-under);
+  border-top-color: var(--color-ribbon-under);
+}
+
+.ribbon span:after {
+  right: 0;
+  border-right-color: var(--color-ribbon-under);
+  border-top-color: var(--color-ribbon-under);
+}
+
+.swiper {
+  contain: layout paint;
+}
