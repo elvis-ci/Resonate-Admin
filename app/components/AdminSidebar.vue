@@ -1,5 +1,7 @@
 <template>
-  <aside class="py-4 px-2.5 h-full overflow-y-scroll flex flex-col justify-between bg-card-bg border-r border-card-border">
+  <aside
+    class="py-4 px-2.5 h-full overflow-y-scroll flex flex-col justify-between bg-card-bg border-r border-card-border"
+  >
     <nav class="space-y-2 text-sm">
       <ul class="space-y-1">
         <li>
@@ -117,6 +119,89 @@
 
         <li>
           <NuxtLink
+            to="/analytics"
+            :class="[
+              'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
+              isActive('/analytics')
+                ? 'text-primary-hover font-bold bg-primary/5'
+                : 'hover:bg-primary/5',
+            ]"
+          >
+            <span class="w-5 h-5 text-primary" aria-hidden="true">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M4 18V8M10 18V4M16 18v-6M22 18V10" />
+              </svg>
+            </span>
+            <span>Analytics</span>
+          </NuxtLink>
+        </li>
+
+        <li>
+          <NuxtLink
+            to="/resources"
+            :class="[
+              'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
+              isActive('/resources')
+                ? 'text-primary-hover font-bold bg-primary/5'
+                : 'hover:bg-primary/5',
+            ]"
+          >
+            <span class="w-5 h-5 text-primary" aria-hidden="true">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 2v20M2 12h20" />
+                <circle cx="12" cy="12" r="7" />
+              </svg>
+            </span>
+            <span>Resources</span>
+          </NuxtLink>
+        </li>
+
+        <li>
+          <NuxtLink
+            to="/billing"
+            :class="[
+              'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
+              isActive('/billing')
+                ? 'text-primary-hover font-bold bg-primary/5'
+                : 'hover:bg-primary/5',
+            ]"
+          >
+            <span class="w-5 h-5 text-primary" aria-hidden="true">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M3 7h18v10H3z" />
+                <path d="M3 10h18" />
+              </svg>
+            </span>
+            <span>Billing</span>
+          </NuxtLink>
+        </li>
+
+        <li>
+          <NuxtLink
             to="/users"
             :class="[
               'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
@@ -184,9 +269,21 @@
   </aside>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const route = useRoute();
-const isActive = (path) => route.path === path;
+const isActive = (path: string): boolean =>
+  route.path === path || (path !== "/" && route.path.startsWith(`${path}/`));
+
+
+  // Scroll to top of sidebar when navigating to a new page
+onMounted(() => {
+  const sidebar = document.querySelector("aside");
+  if (sidebar) {
+    sidebar.scrollTop = 0;
+  }
+
+  const theme : string  = "light";
+});
 </script>
 
 <style scoped>
