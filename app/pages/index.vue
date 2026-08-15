@@ -5,6 +5,11 @@ definePageMeta({
   subtext:
     "A snapshot of bookings, activity, and performance across all locations.",
 });
+const supabase = useSupabaseClient()
+const user = useSupabaseUser()
+
+const { data, error } = await supabase.from('workspaces').select('*').limit(1)
+console.log('Supabase connected:', !error, error)
 </script>
 
 <template>
