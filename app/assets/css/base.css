@@ -1,8 +1,11 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
-:root[data-theme='light'] {
+:root[data-theme="light"] {
   --safe-bottom: env(safe-area-inset-bottom);
   @theme {
+    --color-scrollbar-track: #f1f1f1;
+    --color-scrollbar-thumb: #c1c1c1;
+    --color-scrollbar-thumb-hover: #a8a8a8;
     --color-bg: #ffff;
     --color-alt-bg: #f9fafb;
 
@@ -36,11 +39,14 @@
 
     --color-link: var(--color-primary);
     --shadow-elev: 0 6px 18px rgba(15, 23, 42, 0.06);
-    --logo-filter: none
+    --logo-filter: none;
   }
 }
 
-:root[data-theme='dark'] {
+:root[data-theme="dark"] {
+  --color-scrollbar-track: #24314e;
+  --color-scrollbar-thumb: rgba(181, 197, 219, 0.3);
+  --color-scrollbar-thumb-hover: rgba(181, 197, 219, 0.5);
   --color-bg: #0f172a;
   --color-alt-bg: #111827;
 
@@ -120,18 +126,21 @@
 } */
 
 @media (prefers-reduced-motion: reduce) {
-  html, body {
+  html,
+  body {
     transition: none !important;
   }
-  
-  *, *::before, *::after {
+
+  *,
+  *::before,
+  *::after {
     animation: none !important;
   }
 }
 
 @font-face {
-  font-family: 'Nunito';
-  src: url('/fonts/Nunito-Regular.ttf') format('truetype');
+  font-family: "Nunito";
+  src: url("/fonts/Nunito-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -142,10 +151,10 @@ body {
   margin: 0;
   padding: 0;
   font-family:
-    'Nunito',
+    "Nunito",
     system-ui,
     -apple-system,
-    'Segoe UI',
+    "Segoe UI",
     Roboto,
     Arial,
     sans-serif;
@@ -153,14 +162,16 @@ body {
   background-color: var(--color-bg);
   min-height: 100dvh;
   padding-bottom: env(safe-area-inset-bottom);
-
 }
-*{
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+* {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
 }
 
-.logo{
-  filter: var(--logo-filter)
+.logo {
+  filter: var(--logo-filter);
 }
 main {
   @apply flex-1  pb-[env(safe-area-inset-bottom)];
@@ -225,46 +236,46 @@ section div.container {
 
 /* headings */
 .main-heading {
-  @apply text-3xl sm:text-4xl md:text-6xl font-bold;
+  @apply text-2xl sm:text-3xl md:text-3xl font-bold;
 }
 
 h2 {
-  @apply text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-heading;
+  @apply text-xl sm:text-2xl md:text-3xl font-bold mb-4 text-heading;
 }
 
 h2.white {
-  @apply text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-white;
+  @apply text-xl sm:text-2xl md:text-3xl font-bold mb-4 text-white;
 }
 
 h3 {
-  @apply text-xl sm:text-2xl md:text-2xl font-semibold text-heading;
+  @apply text-lg sm:text-xl md:text-2xl font-semibold text-heading;
 }
 h3.white {
-  @apply text-xl sm:text-2xl md:text-2xl font-semibold text-white/80;
+  @apply text-lg sm:text-xl md:text-2xl font-semibold text-white/80;
 }
 /* headings end */
 
 /* paragraphs */
-p:not(.error):not(.white):not(.tight) {
-  @apply text-base md:text-base lg:text-xl leading-relaxed text-body mb-4;
+p:not(.error):not(.white):not(.tight):not(.primary) {
+  @apply text-sm md:text-base lg:text-lg leading-relaxed text-body mb-4;
 }
 p.tight {
-  @apply text-base md:text-base lg:text-xl leading-relaxed text-body mb-0;
+  @apply text-sm md:text-base lg:text-lg leading-relaxed text-body mb-0;
 }
 p.primary {
-  @apply text-base md:text-base lg:text-xl leading-relaxed text-primary mb-4;
+  @apply text-sm md:text-base lg:text-lg leading-relaxed text-primary mb-2;
 }
 p.error {
-  @apply text-sm sm:text-base md:text-base lg:text-xl leading-relaxed mb-4;
+  @apply text-xs sm:text-sm md:text-sm lg:text-base leading-relaxed mb-4;
 }
 p.white {
-  @apply text-base md:text-base lg:text-xl leading-relaxed text-white/90;
+  @apply text-sm md:text-base lg:text-lg leading-relaxed text-white/90;
 }
 a.white {
-  @apply bg-gradient-to-r from-primary-hover via-white to-primary-hover
+  @apply bg-gradient-to-r from-primary-hover via-body to-primary-hover
 
          bg-clip-text text-transparent 
-         text-xl leading-relaxed;
+         text-xl leading-relaxed tracking-wider;
 }
 
 /* paragraphs end */
@@ -272,27 +283,26 @@ a.white {
 /* Buttons */
 /* Primary Button */
 button.primary {
-  @apply px-4 sm:px-5 md:px-6 lg:px-8 py-2 text-base sm:text-base md:text-base lg:text-base font-bold bg-primary text-white rounded-lg hover:bg-primary-hover focus:bg-primary-hover transition-colors duration-200 active:scale-95;
+  @apply px-4 sm:px-5 md:px-6 lg:px-8 py-2 text-sm sm:text-sm md:text-sm lg:text-base font-bold bg-primary text-white rounded-lg hover:bg-primary-hover focus:bg-primary-hover transition-colors duration-200 active:scale-95;
 }
 a.primary {
-  @apply px-4 sm:px-5 md:px-6 lg:px-8 py-2 text-base sm:text-base md:text-base lg:text-lg font-bold bg-primary text-secondary rounded-lg hover:bg-primary-hover focus:bg-primary-hover transition-colors duration-200 active:scale-95;
+  @apply px-4 sm:px-5 md:px-6 lg:px-8 py-2 text-sm sm:text-sm md:text-sm lg:text-base font-bold bg-primary text-secondary rounded-lg hover:bg-primary-hover focus:bg-primary-hover transition-colors duration-200 active:scale-95;
 }
 
 /* Secondary Button */
 button.secondary {
-  @apply px-4 sm:px-5 md:px-6 lg:px-8 py-2  text-base sm:text-base md:text-base lg:text-base font-bold  border-[1.5px] border-primary text-primary rounded-lg hover:bg-primary-hover/30 focus:bg-primary-hover/30  transition-opacity duration-200 active:scale-95;
+  @apply px-4 sm:px-5 md:px-6 lg:px-8 py-2 text-sm sm:text-sm md:text-sm lg:text-base font-bold border-[1.5px] border-primary text-primary rounded-lg hover:bg-primary-hover/30 focus:bg-primary-hover/30 transition-opacity duration-200 active:scale-95;
 }
 a.secondary {
-  @apply px-4 sm:px-5 md:px-6 lg:px-8 py-2 text-base sm:text-base md:text-base lg:text-base font-bold bg-primary/0 border-[1.5px] border-primary text-secondary-text 
-  rounded-lg hover:bg-primary-hover/30 focus:bg-primary-hover/30  transition-opacity duration-200 active:scale-95;
+  @apply px-4 sm:px-5 md:px-6 lg:px-8 py-2 text-sm sm:text-sm md:text-sm lg:text-base font-bold bg-primary/0 border-[1.5px] border-primary text-secondary-text rounded-lg hover:bg-primary-hover/30 focus:bg-primary-hover/30 transition-opacity duration-200 active:scale-95;
 }
 
 button.cancel {
-  @apply px-4 sm:px-5 md:px-6 lg:px-8 py-2 text-base sm:text-base md:text-base lg:text-base font-bold bg-red-600 text-white rounded-lg hover:bg-red-700 focus:bg-red-700 transition-colors duration-200 active:scale-95;
+  @apply px-4 sm:px-5 md:px-6 lg:px-8 py-2 text-sm sm:text-sm md:text-sm lg:text-base font-bold bg-red-600 text-white rounded-lg hover:bg-red-700 focus:bg-red-700 transition-colors duration-200 active:scale-95;
 }
 input,
 textarea {
-  @apply px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary text-text;
+  @apply px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary text-text text-sm;
 }
 /* Extras */
 /* Ribbon wrapper */
@@ -326,7 +336,7 @@ textarea {
 /* Folded corners */
 .ribbon span:before,
 .ribbon span:after {
-  content: '';
+  content: "";
   position: absolute;
   top: 100%;
   border: 4px solid transparent;
