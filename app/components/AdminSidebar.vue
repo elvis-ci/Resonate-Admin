@@ -2,7 +2,12 @@
   <aside
     class="py-4 px-2.5 h-full overflow-y-scroll flex flex-col justify-between bg-card-bg border-r border-card-border"
   >
-    <nav class="space-y-2 text-sm">
+    <!-- Logo -->
+    <div class="flex items-center gap-3 px-3 py-2">
+      <NuxtLink to="/" class="white font-bold">Reboot</NuxtLink>
+    </div>
+
+    <nav class="space-y-2">
       <ul class="space-y-1">
         <li>
           <NuxtLink
@@ -260,7 +265,7 @@
         </li>
       </ul>
     </nav>
-    <div>
+    <div class="space-y-4">
       <button
         type="button"
         class="theme-toggle-btn"
@@ -298,9 +303,26 @@
           ></span>
         </span>
       </button>
-    </div>
-    <div>
-      <button class="px-3 py-2 rounded-lg bg-primary text-secondary text-sm">
+
+      <button
+        class="flex px-3 py-2 rounded-lg text-body font-bold gap-3 text-sm"
+      >
+        <span class="theme-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <path d="M16 17l5-5-5-5" />
+            <path d="M21 12H9" />
+          </svg>
+        </span>
+
         Sign out
       </button>
     </div>

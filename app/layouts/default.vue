@@ -9,7 +9,7 @@
         </div>
       </div>
 
-      <main class="px-4 space-y-6">
+      <main class="px-4 space-y-6 py-6 ">
         <AdminHeader
           :title="pageMeta.title"
           :heading="pageMeta.heading"
