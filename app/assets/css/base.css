@@ -1,8 +1,11 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
-:root[data-theme='light'] {
+:root[data-theme="light"] {
   --safe-bottom: env(safe-area-inset-bottom);
   @theme {
+    --color-scrollbar-track: #f1f1f1;
+    --color-scrollbar-thumb: #c1c1c1;
+    --color-scrollbar-thumb-hover: #a8a8a8;
     --color-bg: #ffff;
     --color-alt-bg: #f9fafb;
 
@@ -36,11 +39,14 @@
 
     --color-link: var(--color-primary);
     --shadow-elev: 0 6px 18px rgba(15, 23, 42, 0.06);
-    --logo-filter: none
+    --logo-filter: none;
   }
 }
 
-:root[data-theme='dark'] {
+:root[data-theme="dark"] {
+--color-scrollbar-track: #24314e;
+  --color-scrollbar-thumb: rgba(181, 197, 219, 0.3);
+  --color-scrollbar-thumb-hover: rgba(181, 197, 219, 0.5);
   --color-bg: #0f172a;
   --color-alt-bg: #111827;
 
@@ -119,19 +125,24 @@
   }
 } */
 
+
+
 @media (prefers-reduced-motion: reduce) {
-  html, body {
+  html,
+  body {
     transition: none !important;
   }
-  
-  *, *::before, *::after {
+
+  *,
+  *::before,
+  *::after {
     animation: none !important;
   }
 }
 
 @font-face {
-  font-family: 'Nunito';
-  src: url('/fonts/Nunito-Regular.ttf') format('truetype');
+  font-family: "Nunito";
+  src: url("/fonts/Nunito-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -142,10 +153,10 @@ body {
   margin: 0;
   padding: 0;
   font-family:
-    'Nunito',
+    "Nunito",
     system-ui,
     -apple-system,
-    'Segoe UI',
+    "Segoe UI",
     Roboto,
     Arial,
     sans-serif;
@@ -153,14 +164,16 @@ body {
   background-color: var(--color-bg);
   min-height: 100dvh;
   padding-bottom: env(safe-area-inset-bottom);
-
 }
-*{
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+* {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
 }
 
-.logo{
-  filter: var(--logo-filter)
+.logo {
+  filter: var(--logo-filter);
 }
 main {
   @apply flex-1  pb-[env(safe-area-inset-bottom)];
@@ -326,7 +339,7 @@ textarea {
 /* Folded corners */
 .ribbon span:before,
 .ribbon span:after {
-  content: '';
+  content: "";
   position: absolute;
   top: 100%;
   border: 4px solid transparent;

@@ -260,7 +260,45 @@
         </li>
       </ul>
     </nav>
+    <div>
+      <button
+        type="button"
+        class="theme-toggle-btn"
+        :class="{ 'is-dark': theme === 'dark' }"
+        @click="toggle"
+        @keydown="onToggleKeydown"
+        role="switch"
+        :aria-checked="theme === 'dark'"
+        aria-label="Toggle dark mode"
+      >
+        <span class="toggle-label-wrap">
+          <span class="theme-icon" aria-hidden="true">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="4" />
+              <path
+                d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+              />
+            </svg>
+          </span>
+          <span class="theme-text">Dark mode</span>
+        </span>
 
+        <span class="pill" aria-hidden="true">
+          <span
+            class="slider"
+            :class="{ 'slider-right': theme === 'dark' }"
+          ></span>
+        </span>
+      </button>
+    </div>
     <div>
       <button class="px-3 py-2 rounded-lg bg-primary text-secondary text-sm">
         Sign out
@@ -274,21 +312,158 @@ const route = useRoute();
 const isActive = (path: string): boolean =>
   route.path === path || (path !== "/" && route.path.startsWith(`${path}/`));
 
+const { theme, toggle } = useTheme();
 
-  // Scroll to top of sidebar when navigating to a new page
 onMounted(() => {
-  const sidebar = document.querySelector("aside");
+  const sidebar = document.querySelector<HTMLElement>("aside");
   if (sidebar) {
     sidebar.scrollTop = 0;
   }
-
-  const theme : string  = "light";
 });
-</script>
 
+function onToggleKeydown(event: KeyboardEvent) {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    toggle();
+  }
+}
+</script>
 <style scoped>
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background-color: var(--color-scrollbar-track);
+  transition: background-color 2.5s ease;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-scrollbar-thumb);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-scrollbar-thumb-hover);
+}
+::-webkit-scrollbar-corner {
+  background-color: var(--color-scrollbar-track);
+}
+
+/* Reset all buttons to zero first */
+::-webkit-scrollbar-button {
+  display: block;
+  width: 10px;
+  height: 10px;
+  background-color: transparent;
+}
+
+/* Up arrow — only this exact combination */
+::-webkit-scrollbar-button:single-button:vertical:decrement {
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 5px solid var(--color-scrollbar-thumb);
+}
+
+/* Down arrow — only this exact combination */
+::-webkit-scrollbar-button:single-button:vertical:increment {
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--color-scrollbar-thumb);
+}
+
+/* Explicitly hide the "double" button variants that cause duplicates */
+::-webkit-scrollbar-button:double-button:vertical:decrement,
+::-webkit-scrollbar-button:double-button:vertical:increment {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 svg {
   width: 1.25rem;
   height: 1.25rem;
+}
+
+.theme-toggle-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.875rem;
+  background: rgba(160, 90, 0, 0.04);
+  color: var(--color-body);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+  border-color: var(--color-primary);
+}
+
+.toggle-label-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.theme-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-primary);
+}
+
+.theme-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.theme-text {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 3.1rem;
+  height: 1.7rem;
+  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.35);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  flex-shrink: 0;
+}
+
+.slider {
+  position: absolute;
+  left: 0.18rem;
+  top: 0.18rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 9999px;
+  background: var(--color-secondary);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
+  transform: translateX(0);
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.theme-toggle-btn.is-dark .pill {
+  background: rgba(224, 124, 11, 0.2);
+  border-color: rgba(224, 124, 11, 0.5);
+}
+
+.theme-toggle-btn.is-dark .slider {
+  transform: translateX(1.36rem);
+  background: var(--color-primary);
 }
 </style>
