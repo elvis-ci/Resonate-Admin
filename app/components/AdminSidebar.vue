@@ -305,7 +305,11 @@
       </button>
 
       <button
-        class="flex px-3 py-2 rounded-lg text-body font-bold gap-3 text-sm"
+        type="button"
+        class="flex px-3 py-2 cursor-pointer rounded-lg text-body font-bold gap-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"
+        :disabled="isSigningOut"
+        @click="signOut"
+        @keydown="onSignOutKeydown"
       >
         <span class="theme-icon">
           <svg
@@ -323,7 +327,7 @@
           </svg>
         </span>
 
-        Sign out
+        {{ isSigningOut ? "Signing out..." : "Sign out" }}
       </button>
     </div>
   </aside>
@@ -335,6 +339,10 @@ const isActive = (path: string): boolean =>
   route.path === path || (path !== "/" && route.path.startsWith(`${path}/`));
 
 const { theme, toggle } = useTheme();
+const isSigningOut = ref(false);
+
+// Supabase client for auth actions
+const supabase = useSupabaseClient();
 
 onMounted(() => {
   const sidebar = document.querySelector<HTMLElement>("aside");
@@ -347,6 +355,33 @@ function onToggleKeydown(event: KeyboardEvent) {
   if (event.key === "Enter" || event.key === " ") {
     event.preventDefault();
     toggle();
+  }
+}
+
+async function signOut() {
+  if (isSigningOut.value) return;
+
+  isSigningOut.value = true;
+
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Sign out error", error);
+      return;
+    }
+
+    await navigateTo("/signin");
+  } catch (err) {
+    console.error("Unexpected sign out error", err);
+  } finally {
+    isSigningOut.value = false;
+  }
+}
+
+function onSignOutKeydown(event: KeyboardEvent) {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    void signOut();
   }
 }
 </script>

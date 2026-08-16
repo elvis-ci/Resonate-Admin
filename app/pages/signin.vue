@@ -8,14 +8,28 @@ definePageMeta({
 const supabase = useSupabaseClient()
 const email = ref('')
 const password = ref('')
+const isSigningIn = ref(false)
 
 async function login() {
-  const { error } = await supabase.auth.signInWithPassword({
-    email: email.value,
-    password: password.value
-  })
-  if (error) console.error(error)
-  else await navigateTo('/')
+  if (isSigningIn.value) return
+
+  isSigningIn.value = true
+
+  try {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.value,
+      password: password.value,
+    })
+
+    if (error) {
+      console.error(error)
+      return
+    }
+
+    await navigateTo('/')
+  } finally {
+    isSigningIn.value = false
+  }
 }
 const rememberMe = ref(true);
 </script>
@@ -108,10 +122,11 @@ const rememberMe = ref(true);
 
               <button
                 type="submit"
-                class="w-full rounded-xl bg-primary px-4 py-3 text-base font-bold text-white transition-colors duration-200 hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/30"
-                @click="login"
+                class="w-full rounded-xl bg-primary px-4 py-3 text-base font-bold text-white transition-colors duration-200 hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-70"
+                :disabled="isSigningIn"
+                @click.prevent="login"
               >
-                Sign in
+                {{ isSigningIn ? 'Signing in...' : 'Sign in' }}
               </button>
             </form>
 
