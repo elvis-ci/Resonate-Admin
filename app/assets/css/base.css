@@ -8,6 +8,8 @@
     --color-scrollbar-thumb-hover: #a8a8a8;
     --color-bg: #ffff;
     --color-alt-bg: #f9fafb;
+    --color-error-bg: #fef2f2;
+    --color-error-text: #b91c1c;
 
     --color-primary: #a05a00;
     --color-primary-hover: #e67e00;
@@ -50,6 +52,8 @@
   --color-bg: #0f172a;
   --color-alt-bg: #111827;
 
+  --color-error-bg: #fef2f2;
+  --color-error-text: #b91c1c;
   --color-card-bg: #111827;
   --color-card-bg2: #1f2933;
 

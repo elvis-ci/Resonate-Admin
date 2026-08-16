@@ -9,24 +9,42 @@ const supabase = useSupabaseClient()
 const email = ref('')
 const password = ref('')
 const isSigningIn = ref(false)
+const authError = ref('')
+const { theme, toggle } = useTheme()
+
+function onToggleKeydown(event: KeyboardEvent) {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault()
+    toggle()
+  }
+}
 
 async function login() {
   if (isSigningIn.value) return
+
+  authError.value = ''
+
+  if (!email.value.trim() || !password.value.trim()) {
+    authError.value = 'Please enter both your email and password.'
+    return
+  }
 
   isSigningIn.value = true
 
   try {
     const { error } = await supabase.auth.signInWithPassword({
-      email: email.value,
+      email: email.value.trim(),
       password: password.value,
     })
 
     if (error) {
-      console.error(error)
+      authError.value = error.message || 'Unable to sign in. Please try again.'
       return
     }
 
     await navigateTo('/')
+  } catch (err) {
+    authError.value = err instanceof Error ? err.message : 'Unable to sign in. Please try again.'
   } finally {
     isSigningIn.value = false
   }
@@ -36,6 +54,42 @@ const rememberMe = ref(true);
 
 <template>
   <div class="min-h-screen bg-alt-bg text-body">
+    <button
+      type="button"
+      class="fixed top-4 right-4 z-50 theme-toggle-btn-signin"
+      :class="{ 'is-dark': theme === 'dark' }"
+      @click="toggle"
+      @keydown="onToggleKeydown"
+      role="switch"
+      :aria-checked="theme === 'dark'"
+      aria-label="Toggle dark mode"
+    >
+      <span class="theme-icon" aria-hidden="true">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="4" />
+          <path
+            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+          />
+        </svg>
+      </span>
+        Dark Mode
+
+      <span class="pill" aria-hidden="true">
+        <span
+          class="slider"
+          :class="{ 'slider-right': theme === 'dark' }"
+        ></span>
+      </span>
+    </button>
+
     <div class="mx-auto grid min-h-screen lg:grid-cols-2">
       <div class="hidden lg:flex lg:items-center lg:justify-center lg:bg-card-bg lg:p-12">
         <div class="w-full max-w-md space-y-8">
@@ -88,6 +142,10 @@ const rememberMe = ref(true);
             </div>
 
             <form class="space-y-5" >
+              <div v-if="authError" class="rounded-xl text-center border border-error-text/30 bg-error-bg px-3 py-2 text-sm text-error-text" aria-live="polite">
+                {{ authError }}
+              </div>
+
               <div class="space-y-2">
                 <label for="email" class="block text-sm font-semibold text-heading">Email</label>
                 <input
@@ -140,3 +198,74 @@ const rememberMe = ref(true);
     </div>
   </div>
 </template>
+
+<style scoped>
+.theme-toggle-btn-signin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.875rem;
+  background: rgba(160, 90, 0, 0.04);
+  color: var(--color-body);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle-btn-signin:hover {
+  border-color: var(--color-primary);
+}
+
+.theme-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-primary);
+}
+
+.theme-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 3.1rem;
+  height: 1.7rem;
+  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.35);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  flex-shrink: 0;
+}
+
+.slider {
+  position: absolute;
+  left: 0.18rem;
+  top: 0.18rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 9999px;
+  background: var(--color-secondary);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
+  transform: translateX(0);
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.theme-toggle-btn-signin.is-dark .pill {
+  background: rgba(224, 124, 11, 0.2);
+  border-color: rgba(224, 124, 11, 0.5);
+}
+
+.theme-toggle-btn-signin.is-dark .slider {
+  transform: translateX(1.36rem);
+  background: var(--color-primary);
+}
+</style>

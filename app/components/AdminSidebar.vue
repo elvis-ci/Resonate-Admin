@@ -266,6 +266,14 @@
       </ul>
     </nav>
     <div class="space-y-4">
+      <div
+        v-if="signOutError"
+        class="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300"
+        aria-live="polite"
+      >
+        {{ signOutError }}
+      </div>
+
       <button
         type="button"
         class="theme-toggle-btn"
@@ -340,6 +348,7 @@ const isActive = (path: string): boolean =>
 
 const { theme, toggle } = useTheme();
 const isSigningOut = ref(false);
+const signOutError = ref("");
 
 // Supabase client for auth actions
 const supabase = useSupabaseClient();
@@ -361,18 +370,23 @@ function onToggleKeydown(event: KeyboardEvent) {
 async function signOut() {
   if (isSigningOut.value) return;
 
+  signOutError.value = "";
   isSigningOut.value = true;
 
   try {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.error("Sign out error", error);
+      signOutError.value =
+        error.message || "Unable to sign out. Please try again.";
       return;
     }
 
     await navigateTo("/signin");
   } catch (err) {
-    console.error("Unexpected sign out error", err);
+    signOutError.value =
+      err instanceof Error
+        ? err.message
+        : "Unable to sign out. Please try again.";
   } finally {
     isSigningOut.value = false;
   }
