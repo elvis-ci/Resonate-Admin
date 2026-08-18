@@ -261,7 +261,7 @@ h3.white {
 
 /* paragraphs */
 p:not(.error):not(.white):not(.tight):not(.primary) {
-  @apply text-sm md:text-base lg:text-lg leading-relaxed text-body mb-4;
+  @apply text-sm md:text-base lg:text-base leading-relaxed text-body mb-4;
 }
 p.tight {
   @apply text-sm md:text-base lg:text-lg leading-relaxed text-body mb-0;
