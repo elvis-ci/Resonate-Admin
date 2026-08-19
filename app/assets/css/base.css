@@ -260,14 +260,11 @@ h3.white {
 /* headings end */
 
 /* paragraphs */
-p:not(.error):not(.white):not(.tight):not(.primary) {
+/* p:not(.error):not(.white):not(.tight):not(.primary) {
   @apply text-sm md:text-base lg:text-base leading-relaxed text-body mb-4;
 }
 p.tight {
   @apply text-sm md:text-base lg:text-lg leading-relaxed text-body mb-0;
-}
-p.primary {
-  @apply text-sm md:text-base lg:text-lg leading-relaxed text-primary mb-2;
 }
 p.error {
   @apply text-xs sm:text-sm md:text-sm lg:text-base leading-relaxed mb-4;
@@ -280,6 +277,9 @@ a.white {
 
          bg-clip-text text-transparent 
          text-xl leading-relaxed tracking-wider;
+} */
+p.primary {
+  @apply leading-relaxed text-primary mb-2;
 }
 
 /* paragraphs end */
