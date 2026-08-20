@@ -427,7 +427,7 @@ const chartOptions = computed(() => ({
             >
               Revenue
             </p>
-            <p class="text-3xl font-bold mt-3 text-heading">
+            <p class="text-2xl font-bold mt-3 ">
               {{ currencyFormatter.format(stats.total_revenue) }}
             </p>
             <p
@@ -438,7 +438,7 @@ const chartOptions = computed(() => ({
             </p>
           </div>
           <div
-            class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
+            class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -469,7 +469,7 @@ const chartOptions = computed(() => ({
             >
               Bookings
             </p>
-            <p class="text-3xl font-bold mt-3 text-heading">
+            <p class="text-2xl font-bold mt-3 ">
               {{ stats.booking_count }}
             </p>
             <p
@@ -480,7 +480,7 @@ const chartOptions = computed(() => ({
             </p>
           </div>
           <div
-            class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
+            class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -510,7 +510,7 @@ const chartOptions = computed(() => ({
             >
               Avg. Value
             </p>
-            <p class="text-3xl font-bold mt-3 text-heading">
+            <p class="text-2xl font-bold mt-3">
               {{ currencyFormatter.format(stats.avg_booking_value) }}
             </p>
             <p
@@ -521,7 +521,7 @@ const chartOptions = computed(() => ({
             </p>
           </div>
           <div
-            class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
+            class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -551,7 +551,7 @@ const chartOptions = computed(() => ({
             >
               Cancellations
             </p>
-            <p class="text-3xl font-bold mt-3 text-heading">
+            <p class="text-2xl font-bold mt-3 ">
               {{ stats.cancelled_count }}
             </p>
             <p
@@ -565,7 +565,7 @@ const chartOptions = computed(() => ({
             </p>
           </div>
           <div
-            class="w-12 h-12 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0"
+            class="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
