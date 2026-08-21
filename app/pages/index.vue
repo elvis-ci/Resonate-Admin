@@ -111,7 +111,7 @@ type LocationBreakdownRow =
 const { data: locationBreakdown } = useLazyAsyncData<LocationBreakdownRow[]>(
   "dashboard-location-breakdown",
   async () => {
-    if (!isSuperAdmin.value || selectedLocationId.value !== null) return [];
+    // if (!isSuperAdmin.value || selectedLocationId.value !== null) return [];
     const { data, error } = await supabase.rpc("dashboard_location_breakdown", {
       range_start: range.value.start.toISOString(),
       range_end: range.value.end.toISOString(),
