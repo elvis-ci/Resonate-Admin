@@ -145,8 +145,10 @@ const { data: workspaceBreakdown } = useLazyAsyncData<WorkspaceBreakdownRow[]>(
 
 type UpcomingBooking = {
   id: number;
+  booking_code: string;
   guest_name: string | null;
   start_at: string | null;
+  end_at: string | null;
   status: string;
   workspaces: { name: string | null; location_id: number | null } | null;
 };
@@ -156,7 +158,9 @@ const { data: upcomingBookings } = useLazyAsyncData<UpcomingBooking[]>(
   async () => {
     let query = supabase
       .from("workspace_bookings")
-      .select("id, guest_name, start_at, status, workspaces(name, location_id)")
+      .select(
+        "id, booking_code, guest_name, start_at, end_at, status, workspaces(name, location_id)",
+      )
       .eq("status", "confirmed")
       .gte("start_at", new Date().toISOString())
       .order("start_at", { ascending: true })
@@ -172,6 +176,23 @@ const { data: upcomingBookings } = useLazyAsyncData<UpcomingBooking[]>(
   },
   { watch: [selectedLocationId, isSuperAdmin] },
 );
+
+// End time only needs hour:minute — the weekday/start already establishes the day.
+const endTimeFormatter = new Intl.DateTimeFormat("en-NG", {
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+function formatBookingTimeRange(
+  startAt: string | null,
+  endAt: string | null,
+): string {
+  if (!startAt) return "—";
+  const start = timeFormatter.format(new Date(startAt));
+  if (!endAt) return start;
+  const end = endTimeFormatter.format(new Date(endAt));
+  return `${start} – ${end}`;
+}
 
 const currencyFormatter = new Intl.NumberFormat("en-NG", {
   style: "currency",
@@ -707,17 +728,16 @@ const chartOptions = computed(() => ({
           <div>
             <p class="text-heading font-semibold">
               {{ booking.guest_name || "Guest" }}
+              <span class="text-muted font-normal text-xs">
+                · {{ booking.booking_code }}
+              </span>
             </p>
             <p class="text-sm text-muted">
               {{ booking.workspaces?.name || "Workspace" }}
             </p>
           </div>
-          <span class="text-sm font-medium text-heading whitespace-nowrap">
-            {{
-              booking.start_at
-                ? timeFormatter.format(new Date(booking.start_at))
-                : "—"
-            }}
+          <span class="text-sm font-medium text-heading whitespace-nowrap text-right">
+            {{ formatBookingTimeRange(booking.start_at, booking.end_at) }}
           </span>
         </li>
       </ul>
