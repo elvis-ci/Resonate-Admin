@@ -13,10 +13,9 @@ const supabase = useSupabaseClient<Database>();
 const user = useSupabaseUser();
 const { selected, range } = useDateRangeFilter(); // auto-imported, no manual import needed
 
-// ---- Current admin's profile (role + location) ----
 type Profile = { role: string; location_id: number | null };
 
-const { data: profile } = await useAsyncData<Profile | null>(
+const { data: profile, pending: profilePending } = useLazyAsyncData<Profile | null>(
   "current-admin-profile",
   async () => {
     if (!user.value?.sub) return null;
@@ -31,33 +30,9 @@ const { data: profile } = await useAsyncData<Profile | null>(
   { watch: [user] },
 );
 
-// ---- Resolve location name, only if the admin is location-scoped ----
-const { data: locationName } = await useAsyncData<string | null>(
-  "current-admin-location-name",
-  async () => {
-    if (!profile.value?.location_id) return null;
-    const { data } = await supabase
-      .from("locations")
-      .select("location")
-      .eq("id", profile.value.location_id)
-      .single();
-    return data?.location ?? null;
-  },
-  { watch: [profile] },
-);
-
-const isSuperAdmin = computed(() => profile.value?.role === "super_admin");
-
-const scopeLabel = computed(() => {
-  if (isSuperAdmin.value) return "All locations";
-  if (locationName.value) return locationName.value;
-  return null;
-});
-
-// ---- All locations, for the super-admin filter dropdown ----
 type LocationOption = { id: number; location: string };
 
-const { data: locations } = await useAsyncData<LocationOption[]>(
+const { data: locations } = useLazyAsyncData<LocationOption[]>(
   "all-locations",
   async () => {
     const { data, error } = await supabase
@@ -73,16 +48,11 @@ const { data: locations } = await useAsyncData<LocationOption[]>(
 // this value entirely for scoped admins and forces their own location server-side.
 const selectedLocationId = ref<number | null>(null);
 
-// ---- Dashboard stats RPC (now returns prior-period figures too) ----
 type DashboardOverviewRow =
   Database["public"]["Functions"]["dashboard_overview_stats"]["Returns"][number];
 type Stats = DashboardOverviewRow | null;
 
-const {
-  data: stats,
-  pending,
-  error,
-} = await useAsyncData<Stats>(
+const { data: stats, pending, error } = useLazyAsyncData<Stats>(
   "dashboard-overview-stats",
   async () => {
     const { data, error } = await supabase.rpc("dashboard_overview_stats", {
@@ -96,11 +66,32 @@ const {
   { watch: [range, selectedLocationId] },
 );
 
-// ---- Daily trend RPC, drives the chart ----
+const isSuperAdmin = computed(() => profile.value?.role === "super_admin");
+
+const { data: locationName } = useLazyAsyncData<string | null>(
+  "current-admin-location-name",
+  async () => {
+    if (!profile.value?.location_id) return null;
+    const { data } = await supabase
+      .from("locations")
+      .select("location")
+      .eq("id", profile.value.location_id)
+      .single();
+    return data?.location ?? null;
+  },
+  { watch: [profile] },
+);
+
+const scopeLabel = computed(() => {
+  if (isSuperAdmin.value) return "All locations";
+  if (locationName.value) return locationName.value;
+  return null;
+});
+
 type TrendRow =
   Database["public"]["Functions"]["dashboard_daily_trend"]["Returns"][number];
 
-const { data: trend, pending: trendPending } = await useAsyncData<TrendRow[]>(
+const { data: trend, pending: trendPending } = useLazyAsyncData<TrendRow[]>(
   "dashboard-daily-trend",
   async () => {
     const { data, error } = await supabase.rpc("dashboard_daily_trend", {
@@ -114,11 +105,10 @@ const { data: trend, pending: trendPending } = await useAsyncData<TrendRow[]>(
   { watch: [range, selectedLocationId] },
 );
 
-// ---- Per-location breakdown, only fetched for super_admin viewing "All locations" ----
 type LocationBreakdownRow =
   Database["public"]["Functions"]["dashboard_location_breakdown"]["Returns"][number];
 
-const { data: locationBreakdown } = await useAsyncData<LocationBreakdownRow[]>(
+const { data: locationBreakdown } = useLazyAsyncData<LocationBreakdownRow[]>(
   "dashboard-location-breakdown",
   async () => {
     if (!isSuperAdmin.value || selectedLocationId.value !== null) return [];
@@ -136,21 +126,41 @@ const showLocationBreakdown = computed(
   () => isSuperAdmin.value && selectedLocationId.value === null,
 );
 
-// ---- Upcoming bookings ----
+type WorkspaceBreakdownRow =
+  Database["public"]["Functions"]["dashboard_workspace_breakdown"]["Returns"][number];
+
+const { data: workspaceBreakdown } = useLazyAsyncData<WorkspaceBreakdownRow[]>(
+  "dashboard-workspace-breakdown",
+  async () => {
+    const { data, error } = await supabase.rpc("dashboard_workspace_breakdown", {
+      range_start: range.value.start.toISOString(),
+      range_end: range.value.end.toISOString(),
+      filter_location_id: selectedLocationId.value ?? undefined,
+    });
+    if (error) throw error;
+    return data ?? [];
+  },
+  { watch: [range, selectedLocationId] },
+);
+
 type UpcomingBooking = {
   id: number;
+  booking_code: string;
   guest_name: string | null;
   start_at: string | null;
+  end_at: string | null;
   status: string;
   workspaces: { name: string | null; location_id: number | null } | null;
 };
 
-const { data: upcomingBookings } = await useAsyncData<UpcomingBooking[]>(
+const { data: upcomingBookings } = useLazyAsyncData<UpcomingBooking[]>(
   "upcoming-bookings",
   async () => {
     let query = supabase
       .from("workspace_bookings")
-      .select("id, guest_name, start_at, status, workspaces(name, location_id)")
+      .select(
+        "id, booking_code, guest_name, start_at, end_at, status, workspaces(name, location_id)",
+      )
       .eq("status", "confirmed")
       .gte("start_at", new Date().toISOString())
       .order("start_at", { ascending: true })
@@ -166,6 +176,23 @@ const { data: upcomingBookings } = await useAsyncData<UpcomingBooking[]>(
   },
   { watch: [selectedLocationId, isSuperAdmin] },
 );
+
+// End time only needs hour:minute — the weekday/start already establishes the day.
+const endTimeFormatter = new Intl.DateTimeFormat("en-NG", {
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+function formatBookingTimeRange(
+  startAt: string | null,
+  endAt: string | null,
+): string {
+  if (!startAt) return "—";
+  const start = timeFormatter.format(new Date(startAt));
+  if (!endAt) return start;
+  const end = endTimeFormatter.format(new Date(endAt));
+  return `${start} – ${end}`;
+}
 
 const currencyFormatter = new Intl.NumberFormat("en-NG", {
   style: "currency",
@@ -237,41 +264,6 @@ function deltaColor(pct: number | null, lowerIsBetter = false): string {
   return isFavorable ? "text-emerald-600" : "text-red-600";
 }
 
-// ---- Trend chart geometry (simple inline SVG sparkline, no extra deps) ----
-const trendPoints = computed(() => {
-  const rows = trend.value ?? [];
-  if (rows.length === 0)
-    return {
-      path: "",
-      points: [] as { x: number; y: number; day: string; revenue: number }[],
-    };
-
-  const width = 600;
-  const height = 160;
-  const padding = 8;
-  const max = Math.max(...rows.map((r) => r.revenue), 1);
-
-  const points = rows.map((r, i) => {
-    const x =
-      rows.length === 1
-        ? width / 2
-        : padding + (i / (rows.length - 1)) * (width - padding * 2);
-    const y = height - padding - (r.revenue / max) * (height - padding * 2);
-    return { x, y, day: r.day, revenue: r.revenue };
-  });
-
-  const path = points
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
-    .join(" ");
-
-  return { path, points };
-});
-
-const dayLabelFormatter = new Intl.DateTimeFormat("en-NG", {
-  month: "short",
-  day: "numeric",
-});
-
 const dateRangeOptions = [
   "yesterday",
   "today",
@@ -337,9 +329,15 @@ const chartOptions = computed(() => ({
 <template>
   <section class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
+      <!-- Scope control loading placeholder: profile hasn't resolved yet -->
+      <div
+        v-if="profilePending"
+        class="h-7 w-32 rounded-full bg-alt-bg animate-pulse"
+      />
+
       <!-- Super admin: interactive location filter -->
       <select
-        v-if="isSuperAdmin"
+        v-else-if="isSuperAdmin"
         v-model="selectedLocationId"
         class="px-3 py-1 rounded-full text-sm font-semibold bg-primary/10 text-primary-text border-none focus:outline-none focus:ring-2 focus:ring-primary/30"
       >
@@ -427,7 +425,7 @@ const chartOptions = computed(() => ({
             >
               Revenue
             </p>
-            <p class="text-3xl font-bold mt-3 text-heading">
+            <p class="text-2xl font-bold mt-3 ">
               {{ currencyFormatter.format(stats.total_revenue) }}
             </p>
             <p
@@ -438,7 +436,7 @@ const chartOptions = computed(() => ({
             </p>
           </div>
           <div
-            class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
+            class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -469,7 +467,7 @@ const chartOptions = computed(() => ({
             >
               Bookings
             </p>
-            <p class="text-3xl font-bold mt-3 text-heading">
+            <p class="text-2xl font-bold mt-3 ">
               {{ stats.booking_count }}
             </p>
             <p
@@ -480,7 +478,7 @@ const chartOptions = computed(() => ({
             </p>
           </div>
           <div
-            class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
+            class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -510,7 +508,7 @@ const chartOptions = computed(() => ({
             >
               Avg. Value
             </p>
-            <p class="text-3xl font-bold mt-3 text-heading">
+            <p class="text-2xl font-bold mt-3">
               {{ currencyFormatter.format(stats.avg_booking_value) }}
             </p>
             <p
@@ -521,7 +519,7 @@ const chartOptions = computed(() => ({
             </p>
           </div>
           <div
-            class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
+            class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -551,7 +549,7 @@ const chartOptions = computed(() => ({
             >
               Cancellations
             </p>
-            <p class="text-3xl font-bold mt-3 text-heading">
+            <p class="text-2xl font-bold mt-3 ">
               {{ stats.cancelled_count }}
             </p>
             <p
@@ -565,7 +563,7 @@ const chartOptions = computed(() => ({
             </p>
           </div>
           <div
-            class="w-12 h-12 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0"
+            class="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -583,49 +581,6 @@ const chartOptions = computed(() => ({
           </div>
         </div>
       </div>
-
-      <!-- No-shows -->
-      <!-- <div
-        class="rounded-2xl border border-border bg-alt-bg p-5 hover:border-primary/30 transition-colors shadow-elev"
-      >
-        <div class="flex items-start justify-between">
-          <div class="flex-1">
-            <p
-              class="text-sm font-semibold uppercase tracking-[0.1em] text-muted"
-            >
-              No-shows
-            </p>
-            <p class="text-3xl font-bold mt-3 text-heading">
-              {{ stats.no_show_count }}
-            </p>
-            <p
-              v-if="noShowDelta !== null"
-              :class="[
-                'text-xs font-semibold mt-1',
-                deltaColor(noShowDelta, true),
-              ]"
-            >
-              {{ formatDelta(noShowDelta) }} from {{ priorPeriod }}
-            </p>
-          </div>
-          <div
-            class="w-12 h-12 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="w-6 h-6 text-warning"
-            >
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </div>
-        </div>
-      </div> -->
     </div>
 
     <div
@@ -636,24 +591,23 @@ const chartOptions = computed(() => ({
     </div>
   </section>
 
-  <section class="">
+  <section class="mt-6">
     <!-- Revenue trend -->
     <div class="rounded-2xl border border-border bg-alt-bg p-5 shadow-elev">
       <p
-        class="text-sm font-semibold uppercase tracking-[0.1em] text-muted mb-4"
+        class="text-sm font-semibold uppercase primary tracking-[0.1em] text-muted mb-4"
       >
         Revenue trend
       </p>
-      <div class="">
-        <ClientOnly>
-          <apexchart
-            type="area"
-            height="200"
-            :options="chartOptions"
-            :series="chartSeries"
-          />
-        </ClientOnly>
-      </div>
+      <div v-if="trendPending" class="h-[200px] rounded bg-muted/10 animate-pulse" />
+      <ClientOnly v-else>
+        <apexchart
+          type="area"
+          height="200"
+          :options="chartOptions"
+          :series="chartSeries"
+        />
+      </ClientOnly>
       <div
         v-if="!pending && !error && allZero"
         class="text-center text-muted mt-3"
@@ -663,56 +617,105 @@ const chartOptions = computed(() => ({
     </div>
   </section>
 
-  <!-- Per-location breakdown (super admin, "All locations" view only) -->
-  <section>
+  <!-- Location + workspace breakdowns -->
+  <section class="mt-6">
     <div
-      v-if="
-        showLocationBreakdown &&
-        locationBreakdown &&
-        locationBreakdown.length > 0
-      "
-      class="rounded-2xl border border-border bg-alt-bg p-5 shadow-elev overflow-x-auto"
+      class="grid gap-6"
+      :class="showLocationBreakdown ? 'lg:grid-cols-2' : ''"
     >
-      <p
-        class="text-sm font-semibold uppercase tracking-[0.1em] text-muted mb-4"
+      <!-- By location (super admin, "All locations" view only) -->
+      <div
+        v-if="
+          showLocationBreakdown &&
+          locationBreakdown &&
+          locationBreakdown.length > 0
+        "
+        class="rounded-2xl border border-border bg-alt-bg p-5 shadow-elev overflow-x-auto"
       >
-        By location
-      </p>
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="text-left text-muted border-b border-border">
-            <th class="pb-2 font-semibold">Location</th>
-            <th class="pb-2 font-semibold text-right">Revenue</th>
-            <th class="pb-2 font-semibold text-right">Bookings</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="row in locationBreakdown"
-            :key="row.location_id"
-            class="border-b border-border last:border-0"
-          >
-            <td class="py-2 text-heading">{{ row.location_name }}</td>
-            <td class="py-2 text-right text-heading">
-              {{ currencyFormatter.format(row.revenue) }}
-            </td>
-            <td class="py-2 text-right text-heading">
-              {{ row.booking_count }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+        <p
+          class="text-sm font-semibold uppercase primary tracking-[0.1em] text-muted mb-4"
+        >
+          By location
+        </p>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-muted border-b border-border">
+              <th class="pb-2 font-semibold">Location</th>
+              <th class="pb-2 font-semibold text-right">Revenue</th>
+              <th class="pb-2 font-semibold text-right">Bookings</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="row in locationBreakdown"
+              :key="row.location_id"
+              class="border-b border-border last:border-0"
+            >
+              <td class="py-2 text-heading">{{ row.location_name }}</td>
+              <td class="py-2 text-right text-heading">
+                {{ currencyFormatter.format(row.revenue) }}
+              </td>
+              <td class="py-2 text-right text-heading">
+                {{ row.booking_count }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- By workspace — every admin sees this, scoped to their location
+           server-side; super admin sees the current location filter (or
+           top workspaces across all locations when unfiltered). -->
+      <div
+        v-if="workspaceBreakdown && workspaceBreakdown.length > 0"
+        class="rounded-2xl border border-border bg-alt-bg p-5 shadow-elev overflow-x-auto"
+      >
+        <p
+          class="text-sm font-semibold uppercase primary tracking-[0.1em] text-muted mb-4"
+        >
+          By workspace
+        </p>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-muted border-b border-border">
+              <th class="pb-2 font-semibold">Workspace</th>
+              <th class="pb-2 font-semibold text-right">Revenue</th>
+              <th class="pb-2 font-semibold text-right">Bookings</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="row in workspaceBreakdown"
+              :key="row.workspace_id"
+              class="border-b border-border last:border-0"
+            >
+              <td class="py-2 text-heading">
+                {{ row.workspace_name }}
+                <span class="text-muted font-normal">
+                  · {{ row.location_name }}
+                </span>
+              </td>
+              <td class="py-2 text-right text-heading">
+                {{ currencyFormatter.format(row.revenue) }}
+              </td>
+              <td class="py-2 text-right text-heading">
+                {{ row.booking_count }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 
-  <section>
+  <section class="mt-6">
     <!-- Upcoming bookings -->
     <div
       v-if="upcomingBookings && upcomingBookings.length > 0"
       class="rounded-2xl border border-border bg-alt-bg p-5 shadow-elev"
     >
       <p
-        class="text-sm font-semibold uppercase tracking-[0.1em] text-muted mb-4"
+        class="text-sm font-semibold uppercase primary tracking-[0.1em] text-muted mb-4"
       >
         Upcoming bookings
       </p>
@@ -725,17 +728,16 @@ const chartOptions = computed(() => ({
           <div>
             <p class="text-heading font-semibold">
               {{ booking.guest_name || "Guest" }}
+              <span class="text-muted font-normal text-xs">
+                · {{ booking.booking_code }}
+              </span>
             </p>
             <p class="text-sm text-muted">
               {{ booking.workspaces?.name || "Workspace" }}
             </p>
           </div>
-          <span class="text-sm font-medium text-heading whitespace-nowrap">
-            {{
-              booking.start_at
-                ? timeFormatter.format(new Date(booking.start_at))
-                : "—"
-            }}
+          <span class="text-sm font-medium text-heading whitespace-nowrap text-right">
+            {{ formatBookingTimeRange(booking.start_at, booking.end_at) }}
           </span>
         </li>
       </ul>
