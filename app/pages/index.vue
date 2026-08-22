@@ -416,7 +416,7 @@ const chartOptions = computed(() => ({
       <div
         v-for="n in 4"
         :key="n"
-        class="rounded-2xl bg-alt-bg p-5 shadow-elev animate-pulse"
+        class="rounded-2xl bg-card-bg2 p-5 shadow-elev animate-pulse"
       >
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1 space-y-3">
