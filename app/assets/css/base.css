@@ -279,7 +279,7 @@ a.white {
          text-xl leading-relaxed tracking-wider;
 } */
 p.primary {
-  @apply leading-relaxed text-primary mb-2;
+  @apply leading-relaxed text-primary-text mb-2;
 }
 
 /* paragraphs end */
