@@ -309,11 +309,24 @@ const chartOptions = computed(() => ({
   chart: { toolbar: { show: false }, background: "transparent" },
   xaxis: {
     type: "datetime",
-    labels: { format: "MMM d" },
+    labels: {
+      format: "MMM d",
+      style: {
+        colors: "var(--color-muted, #6b7280)",
+        fontSize: "12px",
+        fontWeight: 500,
+      },
+    },
+    axisBorder: { color: "var(--color-border, #e5e7eb)" },
+    axisTicks: { color: "var(--color-border, #e5e7eb)" },
   },
   yaxis: {
     labels: {
       formatter: (val: number) => currencyFormatter.format(val),
+      style: {
+        colors: "var(--color-muted, #6b7280)",
+        fontSize: "12px",
+      },
     },
   },
   tooltip: {
@@ -321,10 +334,12 @@ const chartOptions = computed(() => ({
     y: { formatter: (val: number) => currencyFormatter.format(val) },
   },
   stroke: { curve: "smooth", width: 2 },
-  colors: ["#6366f1"], // swap for your --color-primary
-  grid: { borderColor: "var(--color-border, #e5e7eb)" },
-}));
-</script>
+  colors: ["#6366f1"],
+  grid: {
+    borderColor: "var(--color-border, #e5e7eb)",
+    strokeDashArray: 4, // dashed gridlines, optional touch
+  },
+}));</script>
 
 <template>
   <section class="space-y-6">
