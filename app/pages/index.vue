@@ -350,7 +350,7 @@ const chartOptions = computed(() => ({
       <!-- Scoped admin: static, non-interactive badge -->
       <span
         v-else-if="scopeLabel"
-        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-alt-bg border border-border text-heading"
+        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-alt-bg text-heading"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -401,7 +401,7 @@ const chartOptions = computed(() => ({
       <div
         v-for="n in 4"
         :key="n"
-        class="rounded-2xl border border-border bg-alt-bg p-5 shadow-elev animate-pulse"
+        class="rounded-2xl bg-alt-bg p-5 shadow-elev animate-pulse"
       >
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1 space-y-3">
@@ -416,7 +416,7 @@ const chartOptions = computed(() => ({
     <div v-else-if="stats" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
       <!-- Revenue -->
       <div
-        class="rounded-2xl border border-border bg-alt-bg p-5 hover:border-primary/30 transition-colors shadow-elev"
+        class="rounded-2xl bg-card-bg2 p-5 hover:border-primary/30 transition-colors shadow-elev"
       >
         <div class="flex items-start justify-between">
           <div class="flex-1">
@@ -458,7 +458,7 @@ const chartOptions = computed(() => ({
 
       <!-- Bookings -->
       <div
-        class="rounded-2xl border border-border bg-alt-bg p-5 hover:border-primary/30 transition-colors shadow-elev"
+        class="rounded-2xl bg-card-bg2 p-5 hover:border-primary/30 transition-colors shadow-elev"
       >
         <div class="flex items-start justify-between">
           <div class="flex-1">
@@ -499,7 +499,7 @@ const chartOptions = computed(() => ({
 
       <!-- Avg. Booking Value -->
       <div
-        class="rounded-2xl border border-border bg-alt-bg p-5 hover:border-primary/30 transition-colors shadow-elev"
+        class="rounded-2xl bg-card-bg2 p-5 hover:border-primary/30 transition-colors shadow-elev"
       >
         <div class="flex items-start justify-between">
           <div class="flex-1">
@@ -540,7 +540,7 @@ const chartOptions = computed(() => ({
 
       <!-- Cancellations -->
       <div
-        class="rounded-2xl border border-border bg-alt-bg p-5 hover:border-primary/30 transition-colors shadow-elev"
+        class="rounded-2xl bg-card-bg2 p-5 hover:border-primary/30 transition-colors shadow-elev"
       >
         <div class="flex items-start justify-between">
           <div class="flex-1">
@@ -585,7 +585,7 @@ const chartOptions = computed(() => ({
 
     <div
       v-else
-      class="rounded-2xl border border-border bg-alt-bg p-5 text-muted"
+      class="rounded-2xl bg-card-bg2 p-5 text-muted"
     >
       Loading dashboard overview...
     </div>
@@ -593,7 +593,7 @@ const chartOptions = computed(() => ({
 
   <section class="mt-6">
     <!-- Revenue trend -->
-    <div class="rounded-2xl border border-border bg-alt-bg p-5 shadow-elev">
+    <div class="rounded-2xl bg-card-bg2 p-5 shadow-elev ">
       <p
         class="text-sm font-semibold uppercase primary tracking-[0.1em] text-muted mb-4"
       >
@@ -630,7 +630,7 @@ const chartOptions = computed(() => ({
           locationBreakdown &&
           locationBreakdown.length > 0
         "
-        class="rounded-2xl border border-border bg-alt-bg p-5 shadow-elev overflow-x-auto"
+        class="rounded-2xl bg-alt-bg p-5 shadow-elev overflow-x-auto"
       >
         <p
           class="text-sm font-semibold uppercase primary tracking-[0.1em] text-muted mb-4"
@@ -668,7 +668,7 @@ const chartOptions = computed(() => ({
            top workspaces across all locations when unfiltered). -->
       <div
         v-if="workspaceBreakdown && workspaceBreakdown.length > 0"
-        class="rounded-2xl border border-border bg-alt-bg p-5 shadow-elev overflow-x-auto"
+        class="rounded-2xl bg-alt-bg p-5 shadow-elev overflow-x-auto"
       >
         <p
           class="text-sm font-semibold uppercase primary tracking-[0.1em] text-muted mb-4"
@@ -712,7 +712,7 @@ const chartOptions = computed(() => ({
     <!-- Upcoming bookings -->
     <div
       v-if="upcomingBookings && upcomingBookings.length > 0"
-      class="rounded-2xl border border-border bg-alt-bg p-5 shadow-elev"
+      class="rounded-2xl bg-alt-bg p-5 shadow-elev"
     >
       <p
         class="text-sm font-semibold uppercase primary tracking-[0.1em] text-muted mb-4"
@@ -744,7 +744,7 @@ const chartOptions = computed(() => ({
     </div>
     <div
       v-else-if="upcomingBookings"
-      class="rounded-2xl border border-border bg-alt-bg p-5 text-muted"
+      class="rounded-2xl bg-alt-bg p-5 text-muted"
     >
       No upcoming bookings in the next few days.
     </div>
