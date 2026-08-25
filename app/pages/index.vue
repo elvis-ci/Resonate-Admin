@@ -15,7 +15,7 @@ const { selected, range } = useDateRangeFilter(); // auto-imported, no manual im
 
 type Profile = { role: string; location_id: number | null };
 
-const {profile, pending:profilePending, isSuperAdmin } = useCurrentProfile();
+const {profile, pending:profilePending, isSuperAdmin } = useAdminProfile();
 
 type LocationOption = { id: number; location: string };
 
