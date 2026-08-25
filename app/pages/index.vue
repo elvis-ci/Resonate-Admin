@@ -15,20 +15,7 @@ const { selected, range } = useDateRangeFilter(); // auto-imported, no manual im
 
 type Profile = { role: string; location_id: number | null };
 
-const { data: profile, pending: profilePending } = useLazyAsyncData<Profile | null>(
-  "current-admin-profile",
-  async () => {
-    if (!user.value?.sub) return null;
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("role, location_id")
-      .eq("id", user.value.sub)
-      .single();
-    if (error) throw error;
-    return data;
-  },
-  { watch: [user] },
-);
+const {profile, pending:profilePending, isSuperAdmin } = useCurrentProfile();
 
 type LocationOption = { id: number; location: string };
 
@@ -44,8 +31,7 @@ const { data: locations } = useLazyAsyncData<LocationOption[]>(
   },
 );
 
-// null = "All locations". Only meaningful for super_admin — the RPC ignores
-// this value entirely for scoped admins and forces their own location server-side.
+// null = "All locations". Only meaningful for super_admin — the RPC ignores this value entirely for scoped admins and forces their own location server-side.
 const selectedLocationId = ref<number | null>(null);
 
 type DashboardOverviewRow =
@@ -65,8 +51,6 @@ const { data: stats, pending, error } = useLazyAsyncData<Stats>(
   },
   { watch: [range, selectedLocationId] },
 );
-
-const isSuperAdmin = computed(() => profile.value?.role === "super_admin");
 
 const { data: locationName } = useLazyAsyncData<string | null>(
   "current-admin-location-name",
