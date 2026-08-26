@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const emit = defineEmits<{ close: [] }>();
 const route = useRoute();
 const isActive = (path: string): boolean =>
   route.path === path || (path !== "/" && route.path.startsWith(`${path}/`));
@@ -60,14 +61,16 @@ function onSignOutKeydown(event: KeyboardEvent) {
 </script>
 
 <template>
-  <aside class="py-4 px-2.5 h-full flex flex-col justify-between bg-card-bg border-r border-card-border">
+  <aside
+    class="flex h-full flex-col justify-between border-r border-card-border bg-card-bg px-2.5 py-4"
+  >
     <div class="flex flex-col justify-between space-y-4">
       <!-- Logo -->
       <div class="px-4 py-2.5 flex items-center text-3xl">
         <NuxtLink to="/" class="white font-bold">Reboot</NuxtLink>
       </div>
 
-      <nav class="space-y-2">
+      <nav class="space-y-2" @click="emit('close')">
         <ul class="space-y-2">
           <li>
             <NuxtLink
@@ -326,7 +329,7 @@ function onSignOutKeydown(event: KeyboardEvent) {
         </ul>
       </nav>
     </div>
-    
+
     <div class="space-y-4">
       <p
         v-if="signOutError"
