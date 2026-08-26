@@ -1,9 +1,9 @@
 <template>
   <div class="min-h-screen bg-alt-bg text-body">
     <div class="mx-auto grid lg:grid-cols-[240px_1fr]">
-      <div class="hidden lg:block h-full">
+      <div class="hidden lg:block ">
         <div
-          class="rounded-2xl border border-border bg-card-bg h-screen sticky top-0"
+          class="rounded-2xl border border-border h-screen bg-card-bg sticky top-0"
         >
           <AdminSidebar />
         </div>
