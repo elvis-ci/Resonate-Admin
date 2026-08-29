@@ -244,18 +244,18 @@ section div.container {
 }
 
 h2 {
-  @apply text-xl sm:text-xl md:text-2xl font-bold mb-4 text-heading;
+  @apply text-xl sm:text-2xl md:text-3xl font-bold mb-4 text-heading;
 }
 
 h2.white {
-  @apply text-xl sm:text-xl md:text-2xl font-bold mb-4 text-white;
+  @apply text-xl sm:text-2xl md:text-3xl font-bold mb-4 text-white;
 }
 
 h3 {
-  @apply text-lg sm:text-lg md:text-xl font-semibold text-heading;
+  @apply text-lg sm:text-xl md:text-2xl font-semibold text-heading;
 }
 h3.white {
-  @apply text-lg sm:text-lg md:text-xl font-semibold text-white/80;
+  @apply text-lg sm:text-xl md:text-2xl font-semibold text-white/80;
 }
 /* headings end */
 
