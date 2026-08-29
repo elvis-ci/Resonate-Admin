@@ -15,7 +15,7 @@ const { selected, range } = useDateRangeFilter(); // auto-imported, no manual im
 
 type Profile = { role: string; location_id: number | null };
 
-const {profile, pending:profilePending, isSuperAdmin } = useAdminProfile();
+const { profile, pending: profilePending, isSuperAdmin } = useAdminProfile();
 
 type LocationOption = { id: number; location: string };
 
@@ -38,7 +38,11 @@ type DashboardOverviewRow =
   Database["public"]["Functions"]["dashboard_overview_stats"]["Returns"][number];
 type Stats = DashboardOverviewRow | null;
 
-const { data: stats, pending, error } = useLazyAsyncData<Stats>(
+const {
+  data: stats,
+  pending,
+  error,
+} = useLazyAsyncData<Stats>(
   "dashboard-overview-stats",
   async () => {
     const { data, error } = await supabase.rpc("dashboard_overview_stats", {
@@ -116,11 +120,14 @@ type WorkspaceBreakdownRow =
 const { data: workspaceBreakdown } = useLazyAsyncData<WorkspaceBreakdownRow[]>(
   "dashboard-workspace-breakdown",
   async () => {
-    const { data, error } = await supabase.rpc("dashboard_workspace_breakdown", {
-      range_start: range.value.start.toISOString(),
-      range_end: range.value.end.toISOString(),
-      filter_location_id: selectedLocationId.value ?? undefined,
-    });
+    const { data, error } = await supabase.rpc(
+      "dashboard_workspace_breakdown",
+      {
+        range_start: range.value.start.toISOString(),
+        range_end: range.value.end.toISOString(),
+        filter_location_id: selectedLocationId.value ?? undefined,
+      },
+    );
     if (error) throw error;
     return data ?? [];
   },
@@ -323,7 +330,8 @@ const chartOptions = computed(() => ({
     borderColor: "var(--color-border, #e5e7eb)",
     strokeDashArray: 4, // dashed gridlines, optional touch
   },
-}));</script>
+}));
+</script>
 
 <template>
   <section class="space-y-6">
@@ -424,7 +432,7 @@ const chartOptions = computed(() => ({
             >
               Revenue
             </p>
-            <p class="text-2xl font-bold mt-3 ">
+            <p class="text-2xl font-bold mt-3">
               {{ currencyFormatter.format(stats.total_revenue) }}
             </p>
             <p
@@ -466,7 +474,7 @@ const chartOptions = computed(() => ({
             >
               Bookings
             </p>
-            <p class="text-2xl font-bold mt-3 ">
+            <p class="text-2xl font-bold mt-3">
               {{ stats.booking_count }}
             </p>
             <p
@@ -548,7 +556,7 @@ const chartOptions = computed(() => ({
             >
               Cancellations
             </p>
-            <p class="text-2xl font-bold mt-3 ">
+            <p class="text-2xl font-bold mt-3">
               {{ stats.cancelled_count }}
             </p>
             <p
@@ -582,23 +590,23 @@ const chartOptions = computed(() => ({
       </div>
     </div>
 
-    <div
-      v-else
-      class="rounded-2xl bg-card-bg2 p-5 text-muted"
-    >
+    <div v-else class="rounded-2xl bg-card-bg2 p-5 text-muted">
       Loading dashboard overview...
     </div>
   </section>
 
   <section class="mt-6">
     <!-- Revenue trend -->
-    <div class="rounded-2xl bg-card-bg2 p-5 shadow-elev ">
+    <div class="rounded-2xl bg-card-bg2 p-5 shadow-elev">
       <p
         class="text-sm font-semibold uppercase primary tracking-[0.1em] text-muted mb-4"
       >
         Revenue trend
       </p>
-      <div v-if="trendPending" class="h-[200px] rounded bg-muted/10 animate-pulse" />
+      <div
+        v-if="trendPending"
+        class="h-[200px] rounded bg-muted/10 animate-pulse"
+      />
       <ClientOnly v-else>
         <apexchart
           type="area"
@@ -735,7 +743,9 @@ const chartOptions = computed(() => ({
               {{ booking.workspaces?.name || "Workspace" }}
             </p>
           </div>
-          <span class="text-sm font-medium text-heading whitespace-nowrap text-right">
+          <span
+            class="text-sm font-medium text-heading whitespace-nowrap text-right"
+          >
             {{ formatBookingTimeRange(booking.start_at, booking.end_at) }}
           </span>
         </li>
