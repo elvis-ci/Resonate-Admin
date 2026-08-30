@@ -1,5 +1,8 @@
 import type { Database } from "~/types/database";
+
 type LocationSummary = {
+  id: number;
+  slug: string;
   location: string;
   types: number;
   totalUnits: number;
@@ -8,29 +11,32 @@ type LocationSummary = {
 export function useLocations() {
   const supabase = useSupabaseClient<Database>();
 
-  //fetch locations data
   const {
     data: locations,
     pending,
     error: locationsError,
   } = useLazyAsyncData(async () => {
     const { data, error } = await supabase.from("locations").select(`
-    id,
-    location,
-    workspaces (
       id,
-      type,
-      name,
-      location_id
-    )
-  `);
+      slug,
+      location,
+      workspaces (
+        id,
+        type,
+        name,
+        location_id,
+        status
+      )
+    `);
+
     if (error) throw error;
     return data;
   });
 
-  //summarize locations dtata for each location
   const locationSummary = computed<LocationSummary[]>(() =>
     (locations.value ?? []).map((location) => ({
+      id: location.id,
+      slug:location.slug,
       location: location.location,
       types: new Set(location.workspaces.map((workspace) => workspace.type))
         .size,
@@ -38,5 +44,5 @@ export function useLocations() {
     })),
   );
 
-  return {locations, pending, locationSummary, locationsError}
+  return { locations, pending, locationSummary, locationsError };
 }

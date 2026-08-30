@@ -66,7 +66,6 @@ const locationDataCards = computed(() => [
         key="index"
         class="rounded-2xl bg-card-bg p-5 hover:border-primary/30 transition-colors shadow-elev"
       >
-
         <div>
           <p class="text-sm text-muted">{{ card.title }}</p>
           <p class="mt-2 text-2xl font-bold">{{ card.info }}</p>
@@ -75,9 +74,10 @@ const locationDataCards = computed(() => [
     </div>
   </section>
 
-  <section class="grid gap-4 pb-4 ">
+  <section class="grid gap-4 pb-4">
     <article
       v-for="location in locationSummary"
+      :key="location.id"
       class="rounded-2xl border border-border bg-alt-bg px-5 py-2"
     >
       <div
@@ -91,7 +91,7 @@ const locationDataCards = computed(() => [
           </p>
         </div>
         <div class="flex gap-2">
-          <NuxtLink :to="`/locations/${location.location}`" class="secondary"
+          <NuxtLink :to="`/locations/${location.slug}`" class="secondary"
             >View details</NuxtLink
           >
           <button class="primary">Manage</button>
