@@ -1,15 +1,15 @@
 //source of truth for admin level and location_id. This is used to determine what data the authenticated admin can see. It is fetched from the database on page load and cached in a shared async data store. 
 
 import type { Database } from "~/types/database";
-export type CurrentProfile = {
+export type AdminProfile = {
   role: string;
   location_id: number | null;
 };
 
-export function useCurrentProfile() {
+export function useAdminProfile() {
   const supabase = useSupabaseClient<Database>();
   const user = useSupabaseUser();
-  const { data: profile, pending } = useLazyAsyncData<CurrentProfile | null>(
+  const { data: profile, pending } = useLazyAsyncData<AdminProfile | null>(
     "current-profile",
     async () => {
       if (!user.value?.sub) return null;
