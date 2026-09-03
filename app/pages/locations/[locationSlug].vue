@@ -1,189 +1,237 @@
 <script setup lang="ts">
-import requirePermission from "~/middleware/require-permission";
-import type { Database } from "~/types/database";
-const route = useRoute();
-
 definePageMeta({
-  layout: "default",
+  layout: "location",
   title: "Location details",
-  heading: "Location details", // static — cannot reference `slug` here
-  subtext: "Manage workspaces for this location.",
+  heading: "Location details",
+  subtext: "Manage workspace types and their units.",
   ssr: false,
-  middleware: "require-permission", // string, matching the filename
+  middleware: "require-permission",
   requiredPermission: "manage_locations",
 });
-
-const slug = route.params.locationSlug as string;
-
-if (slug) {
-  route.meta.heading = `Location: ${slug}`;
-  route.meta.subtext = `Manage workspaces at ${slug}`;
-}
-
-const isAddWorkspaceModalOpen = ref(false); //sets add workspace modal to closed
-
-//specifies header button for this page
+const route = useRoute();
+const isAddWorkspaceModalOpen = ref(false);
 route.meta.headerActions = [
   {
-    label: "Back to Locations",
-    onClick: () => {
-      navigateTo('/locations')
-    },
+    label: "Back to locations",
+    onClick: () => navigateTo("/locations"),
     variant: "secondary",
   },
-    {
-    label: "Add Workspace",
-    onClick: () => {
-      isAddWorkspaceModalOpen.value = true;
-    },
+  {
+    label: "Add workspace",
+    onClick: () => (isAddWorkspaceModalOpen.value = true),
     variant: "primary",
   },
 ];
 
-const supabase = useSupabaseClient<Database>();
-const locationId = ref<number | null>(null);
+const locationSlug = computed(() => String(route.params.locationSlug ?? ""));
 
-const { data: location } = useLazyAsyncData(async () => {
-  const { data, error } = await supabase
-    .from("locations")
-    .select("id, location")
-    .eq("slug", slug)
-    .single();
+const { location, isLocationPending, refreshLocation } =
+  usePageLocation(locationSlug);
 
-  if (error) throw error;
-  return data;
+const locationId = computed(() => location.value?.id ?? null);
+
+// workspaces now come straight from the merged fetch — no separate
+// query, no dependency chain, no window for a stale "empty" state to
+// flash between the two.
+
+const workspaceTypes = computed(() =>
+  [
+    ...new Set(
+      (location.value?.workspaces ?? []).map((workspace) => workspace.type),
+    ),
+  ].filter(Boolean),
+);
+
+function formatWorkspaceType(type: string): string {
+  return type
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+const selectedWorkspaces = computed(() =>
+  (location.value?.workspaces ?? []).filter(
+    (workspace) => workspace.type === selectedWorkspaceType.value,
+  ),
+);
+
+// User's explicit click overrides the default; null means "no override yet"
+const explicitWorkspaceType = ref<string | null>(null);
+
+//sets selected workspace type to the first available type if no explicit selection has been made
+const selectedWorkspaceType = computed(() => {
+  if (
+    explicitWorkspaceType.value &&
+    workspaceTypes.value.includes(explicitWorkspaceType.value)
+  ) {
+    return explicitWorkspaceType.value;
+  }
+  return workspaceTypes.value[0] ?? "";
 });
 
 watch(
   location,
   (value) => {
-    locationId.value = value?.id ?? null;
+    route.meta.heading = value?.location || "Loading Location...";
   },
   { immediate: true },
 );
 
-const {
-  data: workspaces,
-  pending: workspacesPending,
-  refresh: refreshWorkspaces,
-} = useLazyAsyncData(
-  async () => {
-    if (locationId.value == null) return [];
-
-    const { data, error } = await supabase
-      .from("workspaces")
-      .select("id, name, type, capacity, status, location_id")
-      .eq("location_id", locationId.value)
-      .order("name");
-
-    if (error) throw error;
-    return data ?? [];
-  },
-  { watch: [locationId] },
-);
-
-const activeWorkspaceCount = computed(
-  () =>
-    (workspaces.value ?? []).filter(
-      (workspace) => (workspace.status ?? "active") !== "disabled",
-    ).length,
-);
-
-const formatWorkspaceStatus = (status: string | null) =>
-  status === "disabled" ? "Disabled" : "Active";
-
-async function toggleWorkspace(workspace: {
-  id: string;
-  status: string | null;
-}) {
-  const nextStatus =
-    (workspace.status ?? "active") === "disabled" ? "active" : "disabled";
-
-  const { error } = await supabase
-    .from("workspaces")
-    .update({ status: nextStatus })
-    .eq("id", workspace.id);
-
-  if (error) {
-    console.error("Failed to update workspace status", error);
-    return;
-  }
-
-  await refreshWorkspaces();
-}
 </script>
 
 <template>
-  <section class="space-y-6">
-    <article class="rounded-2xl border border-border bg-alt-bg p-5">
-      <div class="mb-4 flex items-center justify-between gap-3">
+  <section class="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+    <aside class="rounded-2xl border border-border bg-card-bg p-3">
+      <p
+        class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted"
+      >
+        Workspace types
+      </p>
+      <div v-if="isLocationPending" class="space-y-2 p-2">
+        <div
+          v-for="index in 3"
+          :key="index"
+          class="h-10 animate-pulse rounded-lg bg-muted/10"
+        />
+      </div>
+      <nav v-else class="space-y-1" aria-label="Workspace types">
+        <button
+          v-for="type in workspaceTypes"
+          :key="type"
+          type="button"
+          class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors"
+          :class="
+            selectedWorkspaceType === type
+              ? 'bg-primary/10 font-semibold text-primary'
+              : 'hover:bg-primary/5'
+          "
+          @click="explicitWorkspaceType = type"
+        >
+          <span class="truncate">{{ formatWorkspaceType(type) }}</span>
+          <span class="ml-2 rounded-full bg-bg px-2 py-0.5 text-xs text-muted">
+            {{
+              (location?.workspaces ?? []).filter(
+                (workspace) => workspace.type === type,
+              ).length
+            }}
+          </span>
+        </button>
+        <p v-if="!workspaceTypes.length" class="px-3 py-4 text-sm text-muted">
+          No workspace types yet.
+        </p>
+      </nav>
+    </aside>
+
+    <section class="rounded-2xl border border-border bg-alt-bg p-5">
+      <div class="mb-5 flex items-center justify-between gap-3">
         <div>
-          <h3 class="font-semibold">Workspaces at this location</h3>
-          <p class="text-sm text-muted">
-            {{ (workspaces ?? []).length }} total •
-            {{ activeWorkspaceCount }} active
-          </p>
+          <p class="text-sm text-muted">Workspace type</p>
+          <h2 class="text-lg font-bold text-heading">
+            {{ formatWorkspaceType(selectedWorkspaceType) || "Units" }}
+          </h2>
         </div>
-      </div>
-
-      <div v-if="workspacesPending" class="space-y-3">
-        <div class="h-14 animate-pulse rounded-xl bg-muted/10"></div>
-        <div class="h-14 animate-pulse rounded-xl bg-muted/10"></div>
-      </div>
-
-      <div v-else class="space-y-3">
-        <div
-          v-for="workspace in workspaces"
-          :key="workspace.id"
-          class="flex flex-col gap-3 rounded-xl border border-border bg-bg p-4 md:flex-row md:items-center md:justify-between"
+        <span
+          v-if="selectedWorkspaceType"
+          class="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary"
         >
-          <div>
-            <h4 class="font-semibold text-heading">
-              {{ workspace.name || "Unnamed workspace" }}
-            </h4>
-            <p class="text-sm text-muted">
-              {{ workspace.type }} • Capacity {{ workspace.capacity || 1 }}
-            </p>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <span
-              :class="
-                (workspace.status ?? 'active') === 'disabled'
-                  ? 'rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700'
-                  : 'rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700'
-              "
-            >
-              {{ formatWorkspaceStatus(workspace.status) }}
-            </span>
-
-            <button
-              type="button"
-              class="secondary"
-              @click="toggleWorkspace(workspace)"
-            >
-              {{
-                (workspace.status ?? "active") === "disabled"
-                  ? "Enable"
-                  : "Disable"
-              }}
-            </button>
-          </div>
-        </div>
-
+          {{ selectedWorkspaces.length }} units
+        </span>
+      </div>
+      <div class="">
         <div
-          v-if="!workspaces?.length"
-          class="rounded-xl border border-dashed border-border bg-bg p-6 text-center text-sm text-muted"
+          v-if="isLocationPending"
+          class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
         >
-          No workspaces added yet for this location.
+          <div
+            v-for="index in 6"
+            :key="index"
+            class="h-32 animate-pulse rounded-xl bg-muted/10"
+          />
+        </div>
+        <div
+          v-else-if="selectedWorkspaces.length"
+          class="max-h-[calc(100vh-200px)] overflow-auto rounded-xl border border-border bg-bg"
+        >
+          <table class="w-full min-w-[620px] text-left text-sm">
+            <thead>
+              <tr>
+                <th
+                  scope="col"
+                  class="sticky top-0 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
+                >
+                  Unit
+                </th>
+
+                <th
+                  scope="col"
+                  class="sticky top-0 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
+                >
+                  Capacity
+                </th>
+
+                <th
+                  scope="col"
+                  class="sticky top-0 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
+                >
+                  Status
+                </th>
+
+                <th
+                  scope="col"
+                  class="sticky top-0 z-10 bg-alt-bg px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted"
+                >
+                  Action
+                </th>
+              </tr>
+            </thead>
+
+            <tbody class="divide-y divide-border">
+              <tr v-for="workspace in selectedWorkspaces" :key="workspace.id">
+                <td class="px-4 py-3 font-semibold text-heading">
+                  {{ workspace.name || "Unnamed workspace" }}
+                </td>
+
+                <td class="px-4 py-3 text-body">
+                  {{ workspace.capacity || 1 }}
+                </td>
+
+                <td class="px-4 py-3">
+                  <span
+                    class="rounded-full px-2 py-1 text-xs font-semibold"
+                    :class="
+                      workspace.status === 'disabled'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-emerald-100 text-emerald-700'
+                    "
+                  >
+                    {{
+                      workspace.status === "disabled" ? "Disabled" : "Active"
+                    }}
+                  </span>
+                </td>
+
+                <td class="px-4 py-3 text-right">
+                  <button type="button" class="secondary text-red-700">
+                    Disable
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div
+          v-else
+          class="rounded-xl border border-dashed border-border bg-bg p-8 text-center text-sm text-muted"
+        >
+          Select a workspace type to view its units.
         </div>
       </div>
-    </article>
+    </section>
 
     <AddWorkspaceModal
       v-model="isAddWorkspaceModalOpen"
       :location-id="locationId"
-      @added="refreshWorkspaces"
+      @added="refreshLocation"
     />
   </section>
 </template>
