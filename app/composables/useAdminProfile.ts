@@ -2,6 +2,7 @@
 
 import type { Database } from "~/types/database";
 export type AdminProfile = {
+  full_name: string | null;
   role: string;
   location_id: number | null;
 };
@@ -15,7 +16,7 @@ export function useAdminProfile() {
       if (!user.value?.sub) return null;
       const { data, error } = await supabase
         .from("profiles")
-        .select("role, location_id")
+        .select("full_name, role, location_id")
         .eq("id", user.value.sub)
         .single();
       if (error) throw error;

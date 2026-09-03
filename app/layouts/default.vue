@@ -54,6 +54,7 @@
           :title="pageMeta.title"
           :heading="pageMeta.heading"
           :subtext="pageMeta.subtext"
+          :headerActions = "pageMeta.headerActions"
         />
 
         <slot />
@@ -64,12 +65,16 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+type HeaderAction = { label: string; onClick: () => void };
+
 const route = useRoute();
+
 const isSidebarOpen = ref(false);
 const pageMeta = computed(() => ({
   title: (route.meta.title as string) ?? "Overview",
-  heading: (route.meta.heading as string) ?? "",
+  heading: (route.meta?.heading as string) || "",
   subtext: (route.meta.subtext as string) ?? "",
+  headerActions: route.meta.headerActions as HeaderAction[] | undefined
 }));
 
 function closeSidebar() {

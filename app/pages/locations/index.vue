@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import requirePermission from "~/middleware/require-permission";
-import type { Database } from "~/types/database";
+import type { LocationSummary } from "~/composables/useLocations";
 
 definePageMeta({
   title: "Locations",
@@ -15,7 +15,15 @@ const {
   pending: locationPending,
   locationSummary,
   locationsError,
+  refresh,
 } = useLocations(); //
+const isEditLocationModalOpen = ref(false);
+const selectedLocation = ref<LocationSummary | null>(null);
+
+function editLocation(location: LocationSummary) {
+  selectedLocation.value = location;
+  isEditLocationModalOpen.value = true;
+}
 
 const locationDataCards = computed(() => [
   {
@@ -35,6 +43,20 @@ const locationDataCards = computed(() => [
     info: 0,
   },
 ]);
+
+const isAddLocationModalOpen = ref(false);
+const route = useRoute();
+
+//add header button
+route.meta.headerActions = [
+  {
+    label: "Add Location",
+    onClick: () => {
+      isAddLocationModalOpen.value = true;
+    },
+    variant: "primary"
+  },
+];
 
 // const locationDetails = computed
 </script>
@@ -94,9 +116,17 @@ const locationDataCards = computed(() => [
           <NuxtLink :to="`/locations/${location.slug}`" class="secondary"
             >View details</NuxtLink
           >
-          <button class="primary">Manage</button>
+          <button type="button" class="primary" @click="editLocation(location)">
+            Manage
+          </button>
         </div>
       </div>
     </article>
   </section>
+
+  <EditLocationModal
+    v-model="isEditLocationModalOpen"
+    :location="selectedLocation"
+    @saved="refresh"
+  />
 </template>

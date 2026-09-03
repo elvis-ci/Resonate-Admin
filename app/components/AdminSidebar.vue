@@ -9,6 +9,13 @@ const isSigningOut = ref(false);
 const signOutError = ref("");
 
 const { profile, pending: isProfilePending, isSuperAdmin } = useAdminProfile();
+const adminName = computed(() => profile.value?.full_name || "Administrator");
+const adminRole = computed(() => {
+  const role = profile.value?.role;
+  return role
+    ? role.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
+    : "Admin";
+});
 
 // Supabase client for auth actions
 const supabase = useSupabaseClient();
@@ -331,6 +338,25 @@ function onSignOutKeydown(event: KeyboardEvent) {
     </div>
 
     <div class="space-y-4">
+      <div
+        class="flex items-center gap-3 rounded-xl border border-border bg-bg px-3 py-2.5"
+        aria-label="Admin profile"
+      >
+        <span
+          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary"
+          aria-hidden="true"
+        >
+          {{ adminName.charAt(0).toUpperCase() }}
+        </span>
+        <div class="min-w-0">
+          <p class="text-xs font-medium text-muted">Admin profile</p>
+          <p class="truncate text-sm font-semibold text-heading">
+            {{ isProfilePending ? "Loading..." : adminName }}
+          </p>
+          <p class="truncate text-xs text-muted">{{ adminRole }}</p>
+        </div>
+      </div>
+
       <p
         v-if="signOutError"
         class="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300"
@@ -366,7 +392,7 @@ function onSignOutKeydown(event: KeyboardEvent) {
               />
             </svg>
           </span>
-          <span class="theme-text">Dark mode</span>
+          <span class="text-body">Dark mode</span>
         </span>
 
         <span class="pill" aria-hidden="true">
