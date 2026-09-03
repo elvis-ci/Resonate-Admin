@@ -6,8 +6,8 @@
       <p class="text-sm uppercase tracking-[0.2em] primary text-primary">
         {{ title }}
       </p>
-      <h1 class="main-heading mt-2">{{ heading }}</h1>
-      <p class="mt-2 text-body max-w-2xl">
+      <h1 class="main-heading mt-1">{{ heading }}</h1>
+      <p class="mt-1 text-body max-w-2xl">
         {{ subtext }}
       </p>
     </div>
