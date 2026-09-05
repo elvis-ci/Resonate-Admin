@@ -21,8 +21,8 @@ const isEditLocationModalOpen = ref(false);
 const selectedLocation = ref<LocationSummary | null>(null);
 
 function editLocation(location: LocationSummary) {
-  selectedLocation.value = location;
   isEditLocationModalOpen.value = true;
+  selectedLocation.value = location;
 }
 
 const locationDataCards = computed(() => [
@@ -131,7 +131,6 @@ route.meta.headerActions = [
   />
   <AddLocationModal
     v-model="isAddLocationModalOpen"
-    :location="selectedLocation"
     @saved="refresh"
   />
 </template>
