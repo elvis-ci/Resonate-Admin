@@ -130,7 +130,7 @@ async function saveLocation() {
     @close="close"
   >
     <section
-      class="relative w-full max-w-lg rounded-2xl border border-primary bg-card-bg2 p-5 shadow-xl"
+      class="relative w-full max-w-lg rounded-2xl border border-border bg-alt-bg p-5 shadow-xl"
     >
       <div class="mb-5 flex items-start justify-between gap-4">
         <div>
@@ -149,7 +149,7 @@ async function saveLocation() {
 
       <form class="flex flex-col gap-y-4" @submit.prevent="saveLocation">
         <label class="flex flex-col gap-y-1 text-sm">
-          <span class="font-medium text-heading">
+          <span class="font-medium text-body">
             Location name <span class="text-destructive text-red-500" aria-hidden="true">*</span>
           </span>
           <input
@@ -163,7 +163,7 @@ async function saveLocation() {
         </label>
 
         <label class="flex flex-col gap-y-1 text-sm">
-          <span class="font-medium text-heading">City</span>
+          <span class="font-medium text-body">City</span>
           <input
             v-model="locationCity"
             type="text"
@@ -173,7 +173,7 @@ async function saveLocation() {
         </label>
 
         <label class="flex flex-col gap-y-1 text-sm">
-          <span class="font-medium text-heading">
+          <span class="font-medium text-body">
             Slug <span class="text-destructive text-red-500" aria-hidden="true">*</span>
             <span class="font-normal text-muted"
               >— auto-generated from the location name</span
@@ -191,7 +191,7 @@ async function saveLocation() {
 
         <div class="grid grid-cols-2 gap-4">
           <label class="flex flex-col gap-y-1 text-sm">
-            <span class="font-medium text-heading">Opening time</span>
+            <span class="font-medium text-body">Opening time</span>
             <input
               v-model="openingTime"
               type="time"
@@ -199,7 +199,7 @@ async function saveLocation() {
             />
           </label>
           <label class="flex flex-col gap-y-1 text-sm">
-            <span class="font-medium text-heading">Closing time</span>
+            <span class="font-medium text-body">Closing time</span>
             <input
               v-model="closingTime"
               type="time"
@@ -209,7 +209,7 @@ async function saveLocation() {
         </div>
 
         <label class="flex flex-col gap-y-1 text-sm">
-          <span class="font-medium text-heading">
+          <span class="font-medium text-body">
             Price multiplier
             <span class="font-normal text-muted">— 1 = standard pricing</span>
           </span>
