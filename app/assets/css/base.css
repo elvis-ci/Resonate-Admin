@@ -306,7 +306,7 @@ button.cancel {
 }
 input,
 textarea {
-  @apply px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary text-text text-sm;
+  @apply px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-text text-sm;
 }
 /* Extras */
 /* Ribbon wrapper */

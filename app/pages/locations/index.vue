@@ -18,11 +18,12 @@ const {
   refresh,
 } = useLocations(); //
 const isEditLocationModalOpen = ref(false);
-const selectedLocation = ref<LocationSummary | null>(null);
 
-function editLocation(location: LocationSummary) {
-  selectedLocation.value = location;
+const locationSlug = ref("");
+
+function editLocation(slug: string) {
   isEditLocationModalOpen.value = true;
+  locationSlug.value = slug;
 }
 
 const locationDataCards = computed(() => [
@@ -54,7 +55,7 @@ route.meta.headerActions = [
     onClick: () => {
       isAddLocationModalOpen.value = true;
     },
-    variant: "primary"
+    variant: "primary",
   },
 ];
 
@@ -116,7 +117,7 @@ route.meta.headerActions = [
           <NuxtLink :to="`/locations/${location.slug}`" class="secondary"
             >View details</NuxtLink
           >
-          <button type="button" class="primary" @click="editLocation(location)">
+          <button type="button" class="primary" @click="editLocation(location.slug)">
             Manage
           </button>
         </div>
@@ -126,7 +127,8 @@ route.meta.headerActions = [
 
   <EditLocationModal
     v-model="isEditLocationModalOpen"
-    :location="selectedLocation"
+    :locationSlug="locationSlug"
     @saved="refresh"
   />
+  <AddLocationModal v-model="isAddLocationModalOpen" @saved="refresh" />
 </template>
