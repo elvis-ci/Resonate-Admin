@@ -129,4 +129,9 @@ route.meta.headerActions = [
     :location="selectedLocation"
     @saved="refresh"
   />
+  <AddLocationModal
+    v-model="isAddLocationModalOpen"
+    :location="selectedLocation"
+    @saved="refresh"
+  />
 </template>
