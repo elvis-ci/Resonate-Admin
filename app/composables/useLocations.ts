@@ -44,7 +44,8 @@ export function useLocations() {
       slug: location.slug,
       location: location.location,
       city: location.city,
-      types: new Set(location.workspaces.map((workspace) => workspace.type)).size,
+      types: new Set(location.workspaces.map((workspace) => workspace.type))
+        .size,
       totalUnits: location.workspaces.length,
     })),
   );
@@ -103,4 +104,44 @@ export function usePageLocation(slug: MaybeRefOrGetter<string>) {
   );
 
   return { location, isLocationPending, locationError, refreshLocation };
+}
+
+export function getLocationDetail(slug: MaybeRefOrGetter<string>) {
+  const supabase = useSupabaseClient<Database>();
+
+  const {
+    data: location,
+    pending: isLocationPending,
+    error: locationError,
+  } = useAsyncData(
+    () => `location-detail-${toValue(slug)}`,
+    async () => {
+        const locationSlug = toValue(slug);
+
+      if (!locationSlug) return null;
+
+      const { data, error } = await supabase
+        .from("locations")
+        .select(
+          `
+          id,
+          slug,
+          location,
+          city,
+          price_multiplier,
+          open_time,
+          close_time
+        `,
+        )
+        .eq("slug", locationSlug)
+        .single();
+
+      if (error) throw error;
+
+      return data;
+    },
+    { watch: [() => toValue(slug)] },
+  );
+
+  return { location, isLocationPending, locationError };
 }
