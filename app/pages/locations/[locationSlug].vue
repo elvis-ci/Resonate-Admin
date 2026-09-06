@@ -19,11 +19,6 @@ route.meta.headerActions = [
     onClick: () => navigateTo("/locations"),
     variant: "secondary",
   },
-  {
-    label: "Add workspace",
-    onClick: () => (isAddWorkspaceModalOpen.value = true),
-    variant: "primary",
-  },
 ];
 
 const locationSlug = computed(() => String(route.params.locationSlug ?? ""));
@@ -103,7 +98,7 @@ const confirmModalMessage = computed(() => {
   const name = pendingWorkspace.value?.name || "This workspace";
   return isPendingWorkspaceInactive.value
     ? `${name} will become bookable again immediately.`
-    : `${name} will be hidden from new bookings until reactivated. Existing bookings are not affected.`;
+    : `${name} will be disabled for new bookings until reactivated.`;
 });
 
 // Opens the confirmation modal instead of mutating immediately — the
@@ -153,7 +148,9 @@ async function confirmToggleWorkspace() {
     // see what went wrong and retry, rather than silently closing on
     // failure.
     toggleError.value =
-      err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      err instanceof Error
+        ? err.message
+        : "Something went wrong. Please try again.";
     console.error("Failed to update workspace status:", err);
   } finally {
     isTogglingWorkspace.value = false;
@@ -205,19 +202,28 @@ async function confirmToggleWorkspace() {
     </aside>
 
     <section class="rounded-2xl border border-border bg-alt-bg p-5">
-      <div class="mb-5 flex items-center justify-between gap-3">
-        <div>
-          <p class="text-sm text-muted">Workspace type</p>
-          <h2 class="text-lg font-bold text-heading">
-            {{ formatWorkspaceType(selectedWorkspaceType) || "Units" }}
-          </h2>
+      <div class="flex items-center justify-between">
+        <div class=" flex items-center gap-3">
+          <div>
+            <p class="text-sm text-muted">Workspace type</p>
+            <h2 class="text-lg font-bold text-heading">
+              {{ formatWorkspaceType(selectedWorkspaceType) || "Units" }}
+            </h2>
+          </div>
+          <span
+            v-if="selectedWorkspaceType"
+            class="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary"
+          >
+            {{ selectedWorkspaces.length }} units
+          </span>
         </div>
-        <span
-          v-if="selectedWorkspaceType"
-          class="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary"
+        <button
+          type="button"
+          class="primary"
+          @click="isAddWorkspaceModalOpen = true"
         >
-          {{ selectedWorkspaces.length }} units
-        </span>
+          Add Workspace
+        </button>
       </div>
       <div class="">
         <div
@@ -313,7 +319,11 @@ async function confirmToggleWorkspace() {
                         : 'border-error text-error-text bg-red-200 hover:bg-red-300'
                     "
                   >
-                    {{ workspace.status === "inactive" ? "Activate" : "Deactivate" }}
+                    {{
+                      workspace.status === "inactive"
+                        ? "Activate"
+                        : "Deactivate"
+                    }}
                   </button>
                 </td>
               </tr>
