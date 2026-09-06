@@ -80,18 +80,47 @@ watch(
   { immediate: true },
 );
 
+// ---- Activate / deactivate a workspace, gated behind a confirmation modal ----
+
+type WorkspaceRow = { id: string; name: string | null; status: string | null };
+
+const isConfirmModalOpen = ref(false);
+const isTogglingWorkspace = ref(false);
+const toggleError = ref<string | null>(null);
+const pendingWorkspace = ref<WorkspaceRow | null>(null);
+
+const isPendingWorkspaceInactive = computed(
+  () => pendingWorkspace.value?.status === "inactive",
+);
+
+const confirmModalTitle = computed(() =>
+  isPendingWorkspaceInactive.value
+    ? "Activate workspace?"
+    : "Deactivate workspace?",
+);
+
+const confirmModalMessage = computed(() => {
+  const name = pendingWorkspace.value?.name || "This workspace";
+  return isPendingWorkspaceInactive.value
+    ? `${name} will become bookable again immediately.`
+    : `${name} will be hidden from new bookings until reactivated. Existing bookings are not affected.`;
+});
+
+// Opens the confirmation modal instead of mutating immediately — the
+// actual database call only happens after the admin confirms.
+function toggleWorkspace(workspace: WorkspaceRow) {
+  pendingWorkspace.value = workspace;
+  toggleError.value = null;
+  isConfirmModalOpen.value = true;
+}
+
 async function deactivateWorkspace(workspaceId: string) {
   const { error } = await supabase
     .from("workspaces")
     .update({ status: "inactive" })
     .eq("id", workspaceId);
 
-    if (error) {
-      console.error("Error disabling workspace:", error.message);
-    } else {
-      refreshLocation();
-      return
-    }
+  if (error) throw error;
 }
 
 async function activateWorkspace(workspaceId: string) {
@@ -100,18 +129,34 @@ async function activateWorkspace(workspaceId: string) {
     .update({ status: "active" })
     .eq("id", workspaceId);
 
-  if (error) {
-    console.error("Error activating workspace:", error.message);
-  } else {
-    refreshLocation();
-  }
+  if (error) throw error;
 }
 
-function toggleWorkspace(workspace) {
-  if (workspace.status === "inactive") {
-    activateWorkspace(workspace.id);
-  } else {
-    deactivateWorkspace(workspace.id);
+async function confirmToggleWorkspace() {
+  if (!pendingWorkspace.value) return;
+
+  isTogglingWorkspace.value = true;
+  toggleError.value = null;
+
+  try {
+    if (isPendingWorkspaceInactive.value) {
+      await activateWorkspace(pendingWorkspace.value.id);
+    } else {
+      await deactivateWorkspace(pendingWorkspace.value.id);
+    }
+    isConfirmModalOpen.value = false;
+    pendingWorkspace.value = null;
+    await refreshLocation();
+  } catch (err) {
+    // Surfaced inside the modal itself, via ConfirmModal's own error
+    // slot — see the template. The modal stays open so the admin can
+    // see what went wrong and retry, rather than silently closing on
+    // failure.
+    toggleError.value =
+      err instanceof Error ? err.message : "Something went wrong. Please try again.";
+    console.error("Failed to update workspace status:", err);
+  } finally {
+    isTogglingWorkspace.value = false;
   }
 }
 </script>
@@ -288,6 +333,17 @@ function toggleWorkspace(workspace) {
       v-model="isAddWorkspaceModalOpen"
       :location-id="locationId"
       @added="refreshLocation"
+    />
+
+    <ConfirmModal
+      v-model="isConfirmModalOpen"
+      :title="confirmModalTitle"
+      :message="confirmModalMessage"
+      :confirm-label="isPendingWorkspaceInactive ? 'Activate' : 'Deactivate'"
+      :danger="!isPendingWorkspaceInactive"
+      :is-processing="isTogglingWorkspace"
+      :error="toggleError"
+      @confirm="confirmToggleWorkspace"
     />
   </section>
 </template>
