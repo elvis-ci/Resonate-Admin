@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Database } from "~/types/database";
+
 definePageMeta({
   layout: "location",
   title: "Location details",
@@ -10,6 +12,7 @@ definePageMeta({
 });
 const route = useRoute();
 const isAddWorkspaceModalOpen = ref(false);
+const supabase = useSupabaseClient<Database>();
 route.meta.headerActions = [
   {
     label: "Back to locations",
@@ -77,6 +80,40 @@ watch(
   { immediate: true },
 );
 
+async function deactivateWorkspace(workspaceId: string) {
+  const { error } = await supabase
+    .from("workspaces")
+    .update({ status: "inactive" })
+    .eq("id", workspaceId);
+
+    if (error) {
+      console.error("Error disabling workspace:", error.message);
+    } else {
+      refreshLocation();
+      return
+    }
+}
+
+async function activateWorkspace(workspaceId: string) {
+  const { error } = await supabase
+    .from("workspaces")
+    .update({ status: "active" })
+    .eq("id", workspaceId);
+
+  if (error) {
+    console.error("Error activating workspace:", error.message);
+  } else {
+    refreshLocation();
+  }
+}
+
+function toggleWorkspace(workspace) {
+  if (workspace.status === "inactive") {
+    activateWorkspace(workspace.id);
+  } else {
+    deactivateWorkspace(workspace.id);
+  }
+}
 </script>
 
 <template>
@@ -159,6 +196,13 @@ watch(
                   scope="col"
                   class="sticky top-0 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
                 >
+                  ID
+                </th>
+
+                <th
+                  scope="col"
+                  class="sticky top-0 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
+                >
                   Unit
                 </th>
 
@@ -188,6 +232,9 @@ watch(
             <tbody class="divide-y divide-border">
               <tr v-for="workspace in selectedWorkspaces" :key="workspace.id">
                 <td class="px-4 py-3 font-semibold text-heading">
+                  {{ workspace.id }}
+                </td>
+                <td class="px-4 py-3 font-semibold text-heading">
                   {{ workspace.name || "Unnamed workspace" }}
                 </td>
 
@@ -199,20 +246,29 @@ watch(
                   <span
                     class="rounded-full px-2 py-1 text-xs font-semibold"
                     :class="
-                      workspace.status === 'disabled'
-                        ? 'bg-red-100 text-red-700'
+                      workspace.status === 'inactive'
+                        ? ' bg-red-100 text-red-700'
                         : 'bg-emerald-100 text-emerald-700'
                     "
                   >
                     {{
-                      workspace.status === "disabled" ? "Disabled" : "Active"
+                      workspace.status === "inactive" ? "Inactive" : "Active"
                     }}
                   </span>
                 </td>
 
                 <td class="px-4 py-3 text-right">
-                  <button type="button" class="secondary text-red-700">
-                    Disable
+                  <button
+                    @click="toggleWorkspace(workspace)"
+                    type="button"
+                    class="border rounded-lg p-2"
+                    :class="
+                      workspace.status === 'inactive'
+                        ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-300'
+                        : 'border-error text-error-text bg-red-200 hover:bg-red-300'
+                    "
+                  >
+                    {{ workspace.status === "inactive" ? "Activate" : "Deactivate" }}
                   </button>
                 </td>
               </tr>
