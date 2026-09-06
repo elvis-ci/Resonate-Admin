@@ -31,11 +31,12 @@ const slug = ref("");
 const isSaving = ref(false);
 const savingError = ref<string | null>(null);
 const locationSlug = computed(() => props.locationSlug ?? "");
+const successful = ref(false);
 // Tracks whether the admin has hand-edited the slug — once they have,
 // stop overwriting it as they keep typing the location name.
-
 function close() {
   if (!isSaving.value) emit("update:modelValue", false);
+  successful.value = false;
 }
 
 const { location, isLocationPending, locationError } =
@@ -70,27 +71,65 @@ watch(
   { immediate: true },
 );
 
-// async function saveLocation() {
-//   if (!locationSlug || !locationName.value.trim()) return;
+function slugify(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+}
 
-//   isSaving.value = true;
-//   const { error } = await supabase
-//     .from("locations")
-//     .update({
-//       location: locationName.value.trim(),
-//       city: locationCity.value.trim(),
-//     })
-//     .eq("id", props.location.id);
-//   isSaving.value = false;
+watch(locationName, (value) => {
+  slug.value = slugify(value);
+});
 
-//   if (error) {
-//     console.error("Failed to save location", error);
-//     return;
-//   }
+async function saveLocation() {
+  savingError.value = null;
 
-//   emit("saved");
-//   close();
-// }
+  if (!locationName.value.trim()) {
+    savingError.value = "Location name is required.";
+    return;
+  }
+  if (!slug.value.trim()) {
+    savingError.value = "Slug is required.";
+    return;
+  }
+  if (priceMultiplier.value <= 0) {
+    savingError.value = "Price multiplier must be greater than 0.";
+    return;
+  }
+  if (
+    openingTime.value &&
+    closingTime.value &&
+    openingTime.value >= closingTime.value
+  ) {
+    savingError.value = "Closing time must be after opening time.";
+    return;
+  }
+
+  isSaving.value = true;
+  const { error } = await supabase
+    .from("locations")
+    .update({
+      location: locationName.value.trim(),
+      city: locationCity.value.trim(),
+      open_time: openingTime.value,
+      close_time: closingTime.value,
+      price_multiplier: priceMultiplier.value,
+      slug: slug.value.trim(),
+    })
+    .eq("slug", toValue(locationSlug));
+
+  isSaving.value = false;
+
+  if (error) {
+    savingError.value = "Failed to save location";
+    isSaving.value = false;
+    return;
+  }
+  successful.value = true;
+  emit("saved");
+}
 </script>
 
 <template>
@@ -103,6 +142,27 @@ watch(
     @close="close"
   >
     <section
+      v-if="successful"
+      class="relative w-full max-w-lg rounded-2xl border border-border bg-alt-bg p-5 shadow-xl"
+    >
+      <div class="mb-5">
+        <h3 class="mb-2 font-semibold text-center">Save Successful</h3>
+        <p class="text-sm text-muted text-center">
+          Your changes to {{ locationName }} location have been saved
+        </p>
+      </div>
+      <div class="flex items-center justify-center">
+        <button
+          @click="close"
+          class="primary"
+        >
+          Close
+        </button>
+      </div>
+    </section>
+
+    <section
+      v-else
       class="relative w-full max-w-lg rounded-2xl border border-border bg-alt-bg p-5 shadow-xl"
     >
       <div class="mb-5 flex items-start justify-between gap-4">
@@ -125,14 +185,11 @@ watch(
           <div class="h-10 w-full animate-pulse rounded-lg bg-muted/10" />
           <div class="h-10 w-full animate-pulse rounded-lg bg-muted/10" />
           <div class="h-10 w-full animate-pulse rounded-lg bg-muted/10" />
-          <div
-            class="grid grid-cols-2 gap-4 h-10 rounded-lg"
-          >
+          <div class="grid grid-cols-2 gap-4 h-10 rounded-lg">
             <div class="h-10 w-full animate-pulse rounded-lg bg-muted/10" />
             <div class="h-10 w-full animate-pulse rounded-lg bg-muted/10" />
           </div>
-                    <div class="h-10 w-full animate-pulse rounded-lg bg-muted/10" />
-
+          <div class="h-10 w-full animate-pulse rounded-lg bg-muted/10" />
         </div>
       </div>
       <form v-else class="flex flex-col gap-y-4" @submit.prevent="">
@@ -232,7 +289,12 @@ watch(
           >
             Cancel
           </button>
-          <button type="submit" class="primary" :disabled="isSaving">
+          <button
+            @click="saveLocation()"
+            type="submit"
+            class="primary"
+            :disabled="isSaving"
+          >
             {{ isSaving ? "Saving..." : "Save location" }}
           </button>
         </div>
