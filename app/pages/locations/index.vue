@@ -83,15 +83,15 @@ route.meta.headerActions = [
         </div>
       </div>
     </div>
-    <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div v-else class="grid gap-4 grid-cols-2 xl:grid-cols-4">
       <div
         v-for="card in locationDataCards"
         key="index"
         class="rounded-2xl bg-card-bg p-5 hover:border-primary/30 transition-colors shadow-elev"
       >
-        <div>
+        <div class="flex flex-col h-full justify-between ">
           <p class="text-sm text-muted">{{ card.title }}</p>
-          <p class="mt-2 text-2xl font-bold">{{ card.info }}</p>
+          <p class="mt-2 lg:text-2xl font-bold">{{ card.info }}</p>
         </div>
       </div>
     </div>
@@ -113,7 +113,7 @@ route.meta.headerActions = [
             {{ location.totalUnits }}
           </p>
         </div>
-        <div class="flex gap-2">
+        <div class="w-full  flex items-end gap-2">
           <NuxtLink :to="`/locations/${location.slug}`" class="secondary"
             >View details</NuxtLink
           >
