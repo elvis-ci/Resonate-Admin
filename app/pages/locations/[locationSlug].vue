@@ -161,9 +161,10 @@ function addWorkspace() {
 </script>
 
 <template>
-    <aside class="rounded-2xl border border-border bg-card-bg p-3">
+  <section class=" flex flex-col lg:grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] ">
+    <aside class="rounded-2xl border border-border bg-card-bg p-3 ">
       <p
-        class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted"
+        class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-heading"
       >
         Workspace types
       </p>
@@ -236,35 +237,35 @@ function addWorkspace() {
               <tr>
                 <th
                   scope="col"
-                  class="sticky top-0 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
+                  class="sticky -top-1 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
                 >
                   ID
                 </th>
 
                 <th
                   scope="col"
-                  class="sticky top-0 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
+                  class="sticky -top-1 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
                 >
                   Unit
                 </th>
 
                 <th
                   scope="col"
-                  class="sticky top-0 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
+                  class="sticky -top-1 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
                 >
                   Capacity
                 </th>
 
                 <th
                   scope="col"
-                  class="sticky top-0 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
+                  class="sticky -top-1 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
                 >
                   Status
                 </th>
 
                 <th
                   scope="col"
-                  class="sticky top-0 z-10 bg-alt-bg px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted"
+                  class="sticky -top-1 z-10 bg-alt-bg px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted"
                 >
                   Action
                 </th>
@@ -364,4 +365,5 @@ function addWorkspace() {
       :error="toggleError"
       @confirm="confirmToggleWorkspace"
     />
+  </section>
 </template>
