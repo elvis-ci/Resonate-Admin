@@ -161,7 +161,6 @@ function addWorkspace() {
 </script>
 
 <template>
-  <section class="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
     <aside class="rounded-2xl border border-border bg-card-bg p-3">
       <p
         class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted"
@@ -222,7 +221,7 @@ function addWorkspace() {
         <button
           type="button"
           disabled
-          class="primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-600"
+          class="hidden primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-600"
           @click="addWorkspace"
         >
           Add Workspace
@@ -365,5 +364,4 @@ function addWorkspace() {
       :error="toggleError"
       @confirm="confirmToggleWorkspace"
     />
-  </section>
 </template>
