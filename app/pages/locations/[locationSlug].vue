@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Database } from "~/types/database";
+import { normalizeSupabaseError } from "~/utils/errors.ts";
 
 definePageMeta({
   layout: "location",
@@ -10,9 +11,12 @@ definePageMeta({
   middleware: "require-permission",
   requiredPermission: "manage_locations",
 });
+
 const route = useRoute();
 const isAddWorkspaceModalOpen = ref(false);
 const supabase = useSupabaseClient<Database>();
+
+//sets dynamic header action button for this page
 route.meta.headerActions = [
   {
     label: "Back to locations",
@@ -21,14 +25,14 @@ route.meta.headerActions = [
   },
 ];
 
-const locationSlug = computed(() => String(route.params.locationSlug ?? ""));
+const locationSlug = computed(() => String(route.params.locationSlug ?? "")); //gets the locatio slug from the route
 
 const { location, isLocationPending, refreshLocation } =
   usePageLocation(locationSlug);
 
 const locationId = computed(() => location.value?.id ?? null);
 
-// workspaces now come straight from the merged fetch 
+// workspaces now come straight from the merged fetch
 const workspaceTypes = computed(() =>
   [
     ...new Set(
@@ -37,6 +41,7 @@ const workspaceTypes = computed(() =>
   ].filter(Boolean),
 );
 
+//takes the workspace type from the fetched data and removes all underscore and capitalizes first letter of each word
 function formatWorkspaceType(type: string): string {
   return type
     .split("_")
@@ -73,7 +78,6 @@ watch(
 );
 
 // ---- Activate / deactivate a workspace, gated behind a confirmation modal ----
-
 type WorkspaceRow = { id: string; name: string | null; status: string | null };
 
 const isConfirmModalOpen = ref(false);
@@ -81,16 +85,19 @@ const isTogglingWorkspace = ref(false);
 const toggleError = ref<string | null>(null);
 const pendingWorkspace = ref<WorkspaceRow | null>(null);
 
+//confirms the status of the workspace being edited
 const isPendingWorkspaceInactive = computed(
   () => pendingWorkspace.value?.status === "inactive",
 );
 
+//dynamically set conform modal title base on Activation or Deactivation call
 const confirmModalTitle = computed(() =>
   isPendingWorkspaceInactive.value
     ? "Activate workspace?"
     : "Deactivate workspace?",
 );
 
+//dynamically set confirmation modal subtext
 const confirmModalMessage = computed(() => {
   const name = pendingWorkspace.value?.name || "This workspace";
   return isPendingWorkspaceInactive.value
@@ -106,6 +113,7 @@ function toggleWorkspace(workspace: WorkspaceRow) {
   isConfirmModalOpen.value = true;
 }
 
+//deactivate workspace 
 async function deactivateWorkspace(workspaceId: string) {
   const { error } = await supabase
     .from("workspaces")
@@ -115,6 +123,7 @@ async function deactivateWorkspace(workspaceId: string) {
   if (error) throw error;
 }
 
+//activate workspace
 async function activateWorkspace(workspaceId: string) {
   const { error } = await supabase
     .from("workspaces")
@@ -140,15 +149,7 @@ async function confirmToggleWorkspace() {
     pendingWorkspace.value = null;
     await refreshLocation();
   } catch (err) {
-    // Surfaced inside the modal itself, via ConfirmModal's own error
-    // slot — see the template. The modal stays open so the admin can
-    // see what went wrong and retry, rather than silently closing on
-    // failure.
-    toggleError.value =
-      err instanceof Error
-        ? err.message
-        : "Something went wrong. Please try again.";
-    console.error("Failed to update workspace status:", err);
+    toggleError.value = normalizeSupabaseError(err).message;
   } finally {
     isTogglingWorkspace.value = false;
   }
@@ -272,9 +273,16 @@ function addWorkspace() {
             </thead>
 
             <tbody class="divide-y divide-border">
-              <tr v-if="isLocationPending" v-for="index in 5" :key="index" class="">
+              <tr
+                v-if="isLocationPending"
+                v-for="index in 5"
+                :key="index"
+                class=""
+              >
                 <td v-for="index in 5" :key="index" class="h-15 px-2">
-                  <div class="h-[50%] bg-muted/20 animate-pulse rounded-sm"></div>
+                  <div
+                    class="h-[50%] bg-muted/20 animate-pulse rounded-sm"
+                  ></div>
                 </td>
               </tr>
 
