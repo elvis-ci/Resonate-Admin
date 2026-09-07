@@ -28,10 +28,7 @@ const { location, isLocationPending, refreshLocation } =
 
 const locationId = computed(() => location.value?.id ?? null);
 
-// workspaces now come straight from the merged fetch — no separate
-// query, no dependency chain, no window for a stale "empty" state to
-// flash between the two.
-
+// workspaces now come straight from the merged fetch 
 const workspaceTypes = computed(() =>
   [
     ...new Set(
@@ -156,6 +153,10 @@ async function confirmToggleWorkspace() {
     isTogglingWorkspace.value = false;
   }
 }
+
+function addWorkspace() {
+  isAddWorkspaceModalOpen.value = true;
+}
 </script>
 
 <template>
@@ -203,7 +204,7 @@ async function confirmToggleWorkspace() {
 
     <section class="rounded-2xl border border-border bg-alt-bg p-5">
       <div class="flex items-center justify-between">
-        <div class=" flex items-center gap-3">
+        <div class="flex items-center gap-3">
           <div>
             <p class="text-sm text-muted">Workspace type</p>
             <h2 class="text-lg font-bold text-heading">
@@ -219,25 +220,15 @@ async function confirmToggleWorkspace() {
         </div>
         <button
           type="button"
-          class="primary"
-          @click="isAddWorkspaceModalOpen = true"
+          disabled
+          class="primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-600"
+          @click="addWorkspace"
         >
           Add Workspace
         </button>
       </div>
       <div class="">
         <div
-          v-if="isLocationPending"
-          class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
-        >
-          <div
-            v-for="index in 6"
-            :key="index"
-            class="h-32 animate-pulse rounded-xl bg-muted/10"
-          />
-        </div>
-        <div
-          v-else-if="selectedWorkspaces.length"
           class="max-h-[calc(100vh-200px)] overflow-auto rounded-xl border border-border bg-bg"
         >
           <table class="w-full min-w-[620px] text-left text-sm">
@@ -281,7 +272,17 @@ async function confirmToggleWorkspace() {
             </thead>
 
             <tbody class="divide-y divide-border">
-              <tr v-for="workspace in selectedWorkspaces" :key="workspace.id">
+              <tr v-if="isLocationPending" v-for="index in 5" :key="index" class="">
+                <td v-for="index in 5" :key="index" class="h-15 px-2">
+                  <div class="h-[50%] bg-muted/20 animate-pulse rounded-sm"></div>
+                </td>
+              </tr>
+
+              <tr
+                v-else-if="selectedWorkspaces.length"
+                v-for="workspace in selectedWorkspaces"
+                :key="workspace.id"
+              >
                 <td class="px-4 py-3 font-semibold text-heading">
                   {{ workspace.id }}
                 </td>
@@ -327,14 +328,14 @@ async function confirmToggleWorkspace() {
                   </button>
                 </td>
               </tr>
+              <tr
+                v-else
+                class="rounded-xl border border-dashed border-border bg-bg p-8 text-center text-sm text-muted"
+              >
+                Select a workspace type to view its units.
+              </tr>
             </tbody>
           </table>
-        </div>
-        <div
-          v-else
-          class="rounded-xl border border-dashed border-border bg-bg p-8 text-center text-sm text-muted"
-        >
-          Select a workspace type to view its units.
         </div>
       </div>
     </section>
@@ -342,6 +343,7 @@ async function confirmToggleWorkspace() {
     <AddWorkspaceModal
       v-model="isAddWorkspaceModalOpen"
       :location-id="locationId"
+      :selectedWorkspaceType="selectedWorkspaceType"
       @added="refreshLocation"
     />
 
