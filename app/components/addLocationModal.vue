@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Database } from "~/types/database";
+import { normalizeSupabaseError } from "~/utils/errors.ts";
 
 const props = defineProps<{ modelValue: boolean }>();
 const emit = defineEmits<{
@@ -106,26 +107,29 @@ async function saveLocation() {
 
   isSaving.value = true;
 
-  const { error } = await supabase.from("locations").insert({
-    location: locationName.value.trim(),
-    city: locationCity.value.trim(),
-    slug: slug.value.trim(),
-    price_multiplier: priceMultiplier.value,
-    open_time: openingTime.value || null,
-    close_time: closingTime.value || null,
-  });
+  try {
+    const { error } = await supabase.from("locations").insert({
+      location: locationName.value.trim(),
+      city: locationCity.value.trim(),
+      slug: slug.value.trim(),
+      price_multiplier: priceMultiplier.value,
+      open_time: openingTime.value || null,
+      close_time: closingTime.value || null,
+    });
 
-  isSaving.value = false;
+    if (error) {
+      savingError.value = error.message;
+      return;
+    }
 
-  if (error) {
-    savingError.value = error.message;
-    return;
+    emit("saved");
+    close();
+  } catch (err) {
+   savingError.value = normalizeSupabaseError(err).message;
+  } finally {
+    isSaving.value = false;
   }
-
-  emit("saved");
-  close();
-}
-</script>
+}</script>
 
 <template>
   <dialog
