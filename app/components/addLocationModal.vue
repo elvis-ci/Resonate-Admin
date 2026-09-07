@@ -118,7 +118,7 @@ async function saveLocation() {
     });
 
     if (error) {
-      savingError.value = error.message;
+      throw error
       return;
     }
 
