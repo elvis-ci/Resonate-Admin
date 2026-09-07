@@ -37,7 +37,7 @@ function handleConfirm() {
 <template>
   <dialog
     ref="dialogRef"
-    class="w-full max-w-sm mx-auto my-auto rounded-2xl border border-border bg-alt-bg p-5 shadow-xl backdrop:bg-slate-950/50"
+    class="w-[80%] max-w-sm mx-auto my-auto rounded-2xl border border-border bg-alt-bg p-5 shadow-xl backdrop:bg-slate-950/50"
     aria-labelledby="confirm-modal-title"
     @keydown.esc="close"
     @click.self="close"
