@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import type { Database } from "~/types/database";
+import { normalizeSupabaseError } from "~/utils/errors.ts";
+
 definePageMeta({
   layout: "location",
   title: "Location details",
@@ -8,32 +11,28 @@ definePageMeta({
   middleware: "require-permission",
   requiredPermission: "manage_locations",
 });
+
 const route = useRoute();
 const isAddWorkspaceModalOpen = ref(false);
+const supabase = useSupabaseClient<Database>();
+
+//sets dynamic header action button for this page
 route.meta.headerActions = [
   {
     label: "Back to locations",
     onClick: () => navigateTo("/locations"),
     variant: "secondary",
   },
-  {
-    label: "Add workspace",
-    onClick: () => (isAddWorkspaceModalOpen.value = true),
-    variant: "primary",
-  },
 ];
 
-const locationSlug = computed(() => String(route.params.locationSlug ?? ""));
+const locationSlug = computed(() => String(route.params.locationSlug ?? "")); //gets the locatio slug from the route
 
 const { location, isLocationPending, refreshLocation } =
   usePageLocation(locationSlug);
 
 const locationId = computed(() => location.value?.id ?? null);
 
-// workspaces now come straight from the merged fetch — no separate
-// query, no dependency chain, no window for a stale "empty" state to
-// flash between the two.
-
+// workspaces now come straight from the merged fetch
 const workspaceTypes = computed(() =>
   [
     ...new Set(
@@ -42,6 +41,7 @@ const workspaceTypes = computed(() =>
   ].filter(Boolean),
 );
 
+//takes the workspace type from the fetched data and removes all underscore and capitalizes first letter of each word
 function formatWorkspaceType(type: string): string {
   return type
     .split("_")
@@ -77,10 +77,90 @@ watch(
   { immediate: true },
 );
 
+// ---- Activate / deactivate a workspace, gated behind a confirmation modal ----
+type WorkspaceRow = { id: string; name: string | null; status: string | null };
+
+const isConfirmModalOpen = ref(false);
+const isTogglingWorkspace = ref(false);
+const toggleError = ref<string | null>(null);
+const pendingWorkspace = ref<WorkspaceRow | null>(null);
+
+//confirms the status of the workspace being edited
+const isPendingWorkspaceInactive = computed(
+  () => pendingWorkspace.value?.status === "inactive",
+);
+
+//dynamically set conform modal title base on Activation or Deactivation call
+const confirmModalTitle = computed(() =>
+  isPendingWorkspaceInactive.value
+    ? "Activate workspace?"
+    : "Deactivate workspace?",
+);
+
+//dynamically set confirmation modal subtext
+const confirmModalMessage = computed(() => {
+  const name = pendingWorkspace.value?.name || "This workspace";
+  return isPendingWorkspaceInactive.value
+    ? `${name} will become bookable again immediately.`
+    : `${name} will be disabled for new bookings until reactivated.`;
+});
+
+// Opens the confirmation modal instead of mutating immediately — the
+// actual database call only happens after the admin confirms.
+function toggleWorkspace(workspace: WorkspaceRow) {
+  pendingWorkspace.value = workspace;
+  toggleError.value = null;
+  isConfirmModalOpen.value = true;
+}
+
+//deactivate workspace 
+async function deactivateWorkspace(workspaceId: string) {
+  const { error } = await supabase
+    .from("workspaces")
+    .update({ status: "inactive" })
+    .eq("id", workspaceId);
+
+  if (error) throw error;
+}
+
+//activate workspace
+async function activateWorkspace(workspaceId: string) {
+  const { error } = await supabase
+    .from("workspaces")
+    .update({ status: "active" })
+    .eq("id", workspaceId);
+
+  if (error) throw error;
+}
+
+async function confirmToggleWorkspace() {
+  if (!pendingWorkspace.value) return;
+
+  isTogglingWorkspace.value = true;
+  toggleError.value = null;
+
+  try {
+    if (isPendingWorkspaceInactive.value) {
+      await activateWorkspace(pendingWorkspace.value.id);
+    } else {
+      await deactivateWorkspace(pendingWorkspace.value.id);
+    }
+    isConfirmModalOpen.value = false;
+    pendingWorkspace.value = null;
+    await refreshLocation();
+  } catch (err) {
+    toggleError.value = normalizeSupabaseError(err).message;
+  } finally {
+    isTogglingWorkspace.value = false;
+  }
+}
+
+function addWorkspace() {
+  isAddWorkspaceModalOpen.value = true;
+}
 </script>
 
 <template>
-  <section class="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
     <aside class="rounded-2xl border border-border bg-card-bg p-3">
       <p
         class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted"
@@ -123,38 +203,44 @@ watch(
     </aside>
 
     <section class="rounded-2xl border border-border bg-alt-bg p-5">
-      <div class="mb-5 flex items-center justify-between gap-3">
-        <div>
-          <p class="text-sm text-muted">Workspace type</p>
-          <h2 class="text-lg font-bold text-heading">
-            {{ formatWorkspaceType(selectedWorkspaceType) || "Units" }}
-          </h2>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div>
+            <p class="text-sm text-muted">Workspace type</p>
+            <h2 class="text-lg font-bold text-heading">
+              {{ formatWorkspaceType(selectedWorkspaceType) || "Units" }}
+            </h2>
+          </div>
+          <span
+            v-if="selectedWorkspaceType"
+            class="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary"
+          >
+            {{ selectedWorkspaces.length }} units
+          </span>
         </div>
-        <span
-          v-if="selectedWorkspaceType"
-          class="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary"
+        <button
+          type="button"
+          disabled
+          class="hidden primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-600"
+          @click="addWorkspace"
         >
-          {{ selectedWorkspaces.length }} units
-        </span>
+          Add Workspace
+        </button>
       </div>
       <div class="">
         <div
-          v-if="isLocationPending"
-          class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
-        >
-          <div
-            v-for="index in 6"
-            :key="index"
-            class="h-32 animate-pulse rounded-xl bg-muted/10"
-          />
-        </div>
-        <div
-          v-else-if="selectedWorkspaces.length"
           class="max-h-[calc(100vh-200px)] overflow-auto rounded-xl border border-border bg-bg"
         >
           <table class="w-full min-w-[620px] text-left text-sm">
             <thead>
               <tr>
+                <th
+                  scope="col"
+                  class="sticky top-0 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
+                >
+                  ID
+                </th>
+
                 <th
                   scope="col"
                   class="sticky top-0 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
@@ -186,7 +272,27 @@ watch(
             </thead>
 
             <tbody class="divide-y divide-border">
-              <tr v-for="workspace in selectedWorkspaces" :key="workspace.id">
+              <tr
+                v-if="isLocationPending"
+                v-for="index in 5"
+                :key="index"
+                class=""
+              >
+                <td v-for="index in 5" :key="index" class="h-15 px-2">
+                  <div
+                    class="h-[50%] bg-muted/20 animate-pulse rounded-sm"
+                  ></div>
+                </td>
+              </tr>
+
+              <tr
+                v-else-if="selectedWorkspaces.length"
+                v-for="workspace in selectedWorkspaces"
+                :key="workspace.id"
+              >
+                <td class="px-4 py-3 font-semibold text-heading">
+                  {{ workspace.id }}
+                </td>
                 <td class="px-4 py-3 font-semibold text-heading">
                   {{ workspace.name || "Unnamed workspace" }}
                 </td>
@@ -199,31 +305,44 @@ watch(
                   <span
                     class="rounded-full px-2 py-1 text-xs font-semibold"
                     :class="
-                      workspace.status === 'disabled'
-                        ? 'bg-red-100 text-red-700'
+                      workspace.status === 'inactive'
+                        ? ' bg-red-100 text-red-700'
                         : 'bg-emerald-100 text-emerald-700'
                     "
                   >
                     {{
-                      workspace.status === "disabled" ? "Disabled" : "Active"
+                      workspace.status === "inactive" ? "Inactive" : "Active"
                     }}
                   </span>
                 </td>
 
                 <td class="px-4 py-3 text-right">
-                  <button type="button" class="secondary text-red-700">
-                    Disable
+                  <button
+                    @click="toggleWorkspace(workspace)"
+                    type="button"
+                    class="border rounded-lg p-2"
+                    :class="
+                      workspace.status === 'inactive'
+                        ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-300'
+                        : 'border-error text-error-text bg-red-200 hover:bg-red-300'
+                    "
+                  >
+                    {{
+                      workspace.status === "inactive"
+                        ? "Activate"
+                        : "Deactivate"
+                    }}
                   </button>
                 </td>
               </tr>
+              <tr
+                v-else
+                class="rounded-xl border border-dashed border-border bg-bg p-8 text-center text-sm text-muted"
+              >
+                Select a workspace type to view its units.
+              </tr>
             </tbody>
           </table>
-        </div>
-        <div
-          v-else
-          class="rounded-xl border border-dashed border-border bg-bg p-8 text-center text-sm text-muted"
-        >
-          Select a workspace type to view its units.
         </div>
       </div>
     </section>
@@ -231,7 +350,18 @@ watch(
     <AddWorkspaceModal
       v-model="isAddWorkspaceModalOpen"
       :location-id="locationId"
+      :selectedWorkspaceType="selectedWorkspaceType"
       @added="refreshLocation"
     />
-  </section>
+
+    <ConfirmModal
+      v-model="isConfirmModalOpen"
+      :title="confirmModalTitle"
+      :message="confirmModalMessage"
+      :confirm-label="isPendingWorkspaceInactive ? 'Activate' : 'Deactivate'"
+      :danger="!isPendingWorkspaceInactive"
+      :is-processing="isTogglingWorkspace"
+      :error="toggleError"
+      @confirm="confirmToggleWorkspace"
+    />
 </template>

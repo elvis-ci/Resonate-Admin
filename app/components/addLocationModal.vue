@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Database } from "~/types/database";
+import { normalizeSupabaseError } from "~/utils/errors.ts";
 
 const props = defineProps<{ modelValue: boolean }>();
 const emit = defineEmits<{
@@ -9,7 +10,6 @@ const emit = defineEmits<{
 
 const supabase = useSupabaseClient<Database>();
 const dialogRef = ref<HTMLDialogElement | null>(null);
-
 const locationName = ref("");
 const locationCity = ref("");
 const priceMultiplier = ref(1);
@@ -23,6 +23,7 @@ const savingError = ref<string | null>(null);
 // stop overwriting it as they keep typing the location name.
 const slugManuallyEdited = ref(false);
 
+//takes the location name and creates a hyphenated  url-friendly slug
 function slugify(value: string): string {
   return value
     .trim()
@@ -31,16 +32,21 @@ function slugify(value: string): string {
     .replace(/[^a-z0-9-]/g, "");
 }
 
+//watches for change in location name value and generated a new slug with the new value
 watch(locationName, (value) => {
   if (!slugManuallyEdited.value) {
     slug.value = slugify(value);
   }
 });
 
+//stops auto generation of slug and allows manual editing of slug value.
+// This is useful for when the auto generated slug already exists for a different loocation
 function onSlugInput() {
   slugManuallyEdited.value = true;
 }
 
+//watches for change in modelValue prop and opens or closes the modal accordingly
+//Also resets the form values when the modal is opened or closed
 watch(
   () => props.modelValue,
   (isOpen) => {
@@ -66,11 +72,14 @@ function close() {
   if (!isSaving.value) emit("update:modelValue", false);
 }
 
+//listens for click on the dialog backdrop and closes the modal if the click is on the backdrop
+//this can also be done with a simple @close on the dialog
 function onBackDropClick(event: MouseEvent) {
   if (event.target === dialogRef.value) {
     close();
   }
 }
+
 
 async function saveLocation() {
   savingError.value = null;
@@ -98,28 +107,29 @@ async function saveLocation() {
 
   isSaving.value = true;
 
-  // Column names match the actual schema: open_time / close_time,
-  // not opening_time / closing_time.
-  const { error } = await supabase.from("locations").insert({
-    location: locationName.value.trim(),
-    city: locationCity.value.trim(),
-    slug: slug.value.trim(),
-    price_multiplier: priceMultiplier.value,
-    open_time: openingTime.value || null,
-    close_time: closingTime.value || null,
-  });
+  try {
+    const { error } = await supabase.from("locations").insert({
+      location: locationName.value.trim(),
+      city: locationCity.value.trim(),
+      slug: slug.value.trim(),
+      price_multiplier: priceMultiplier.value,
+      open_time: openingTime.value || null,
+      close_time: closingTime.value || null,
+    });
 
-  isSaving.value = false;
+    if (error) {
+      throw error
+      return;
+    }
 
-  if (error) {
-    savingError.value = error.message;
-    return;
+    emit("saved");
+    close();
+  } catch (err) {
+   savingError.value = normalizeSupabaseError(err).message;
+  } finally {
+    isSaving.value = false;
   }
-
-  emit("saved");
-  close();
-}
-</script>
+}</script>
 
 <template>
   <dialog
@@ -150,7 +160,10 @@ async function saveLocation() {
       <form class="flex flex-col gap-y-4" @submit.prevent="saveLocation">
         <label class="flex flex-col gap-y-1 text-sm">
           <span class="font-medium text-body">
-            Location name <span class="text-destructive text-red-500" aria-hidden="true">*</span>
+            Location name
+            <span class="text-destructive text-red-500" aria-hidden="true"
+              >*</span
+            >
           </span>
           <input
             v-model="locationName"
@@ -174,7 +187,10 @@ async function saveLocation() {
 
         <label class="flex flex-col gap-y-1 text-sm">
           <span class="font-medium text-body">
-            Slug <span class="text-destructive text-red-500" aria-hidden="true">*</span>
+            Slug
+            <span class="text-destructive text-red-500" aria-hidden="true"
+              >*</span
+            >
             <span class="font-normal text-muted"
               >— auto-generated from the location name</span
             >

@@ -69,7 +69,7 @@ function onSignOutKeydown(event: KeyboardEvent) {
 
 <template>
   <aside
-    class="flex h-full flex-col justify-between border-r border-card-border bg-card-bg px-2.5 py-4"
+    class="flex h-full flex-col justify-between border-r border-card-border bg-card-bg px-2.5 py-4 max-h-screen overflow-y-scroll"
   >
     <div class="flex flex-col justify-between space-y-4">
       <!-- Logo -->
