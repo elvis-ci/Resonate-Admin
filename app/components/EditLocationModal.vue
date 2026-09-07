@@ -32,8 +32,7 @@ const isSaving = ref(false);
 const savingError = ref<string | null>(null);
 const locationSlug = computed(() => props.locationSlug ?? "");
 const successful = ref(false);
-// Tracks whether the admin has hand-edited the slug — once they have,
-// stop overwriting it as they keep typing the location name.
+
 function close() {
   if (!isSaving.value) emit("update:modelValue", false);
   successful.value = false;
