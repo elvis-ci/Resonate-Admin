@@ -104,7 +104,7 @@ route.meta.headerActions = [
       class="rounded-2xl border border-border bg-alt-bg px-5 py-2"
     >
       <div
-        class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+        class="flex flex-col gap-4 md:flex-row md:items-center justify-between"
       >
         <div>
           <h3 class="font-semibold">{{ location.location }}</h3>
@@ -113,7 +113,7 @@ route.meta.headerActions = [
             {{ location.totalUnits }}
           </p>
         </div>
-        <div class="w-full  flex items-end gap-2">
+        <div class="flex items-end gap-2">
           <NuxtLink :to="`/locations/${location.slug}`" class="secondary"
             >View details</NuxtLink
           >

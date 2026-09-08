@@ -432,7 +432,7 @@ function onSignOutKeydown(event: KeyboardEvent) {
   </aside>
 </template>
 
-<style scoped>
+<style >
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

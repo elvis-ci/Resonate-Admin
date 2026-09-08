@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { Database } from "~/types/database";
 import { normalizeSupabaseError } from "~/utils/errors.ts";
+import { formatWorkspaceType } from "~/utils/formatWorkspaceType.ts";
+
+const route = useRoute();
 
 definePageMeta({
   layout: "location",
@@ -12,10 +15,6 @@ definePageMeta({
   requiredPermission: "manage_locations",
 });
 
-const route = useRoute();
-const isAddWorkspaceModalOpen = ref(false);
-const supabase = useSupabaseClient<Database>();
-
 //sets dynamic header action button for this page
 route.meta.headerActions = [
   {
@@ -25,6 +24,7 @@ route.meta.headerActions = [
   },
 ];
 
+const isAddWorkspaceModalOpen = ref(false); //modal opening control
 const locationSlug = computed(() => String(route.params.locationSlug ?? "")); //gets the locatio slug from the route
 
 const { location, isLocationPending, refreshLocation } =
@@ -32,7 +32,7 @@ const { location, isLocationPending, refreshLocation } =
 
 const locationId = computed(() => location.value?.id ?? null);
 
-// workspaces now come straight from the merged fetch
+// maps all workspaces to a workspace type
 const workspaceTypes = computed(() =>
   [
     ...new Set(
@@ -40,14 +40,6 @@ const workspaceTypes = computed(() =>
     ),
   ].filter(Boolean),
 );
-
-//takes the workspace type from the fetched data and removes all underscore and capitalizes first letter of each word
-function formatWorkspaceType(type: string): string {
-  return type
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
 
 const selectedWorkspaces = computed(() =>
   (location.value?.workspaces ?? []).filter(
@@ -77,92 +69,29 @@ watch(
   { immediate: true },
 );
 
-// ---- Activate / deactivate a workspace, gated behind a confirmation modal ----
-type WorkspaceRow = { id: string; name: string | null; status: string | null };
+const {
+  isConfirmModalOpen,
+  isTogglingWorkspace,
+  updateError,
+  isCurrentWorkspaceInactive,
+  confirmModalTitle,
+  confirmModalMessage,
+  toggleStatusUpdate,
+  confirmStatusUpdate,
+} = useWorkspaceStatusConfirmation();
 
-const isConfirmModalOpen = ref(false);
-const isTogglingWorkspace = ref(false);
-const toggleError = ref<string | null>(null);
-const pendingWorkspace = ref<WorkspaceRow | null>(null);
+async function handleStatusUpdate() {
+  const success = await confirmStatusUpdate();
 
-//confirms the status of the workspace being edited
-const isPendingWorkspaceInactive = computed(
-  () => pendingWorkspace.value?.status === "inactive",
-);
-
-//dynamically set conform modal title base on Activation or Deactivation call
-const confirmModalTitle = computed(() =>
-  isPendingWorkspaceInactive.value
-    ? "Activate workspace?"
-    : "Deactivate workspace?",
-);
-
-//dynamically set confirmation modal subtext
-const confirmModalMessage = computed(() => {
-  const name = pendingWorkspace.value?.name || "This workspace";
-  return isPendingWorkspaceInactive.value
-    ? `${name} will become bookable again immediately.`
-    : `${name} will be disabled for new bookings until reactivated.`;
-});
-
-// Opens the confirmation modal instead of mutating immediately — the
-// actual database call only happens after the admin confirms.
-function toggleWorkspace(workspace: WorkspaceRow) {
-  pendingWorkspace.value = workspace;
-  toggleError.value = null;
-  isConfirmModalOpen.value = true;
-}
-
-//deactivate workspace 
-async function deactivateWorkspace(workspaceId: string) {
-  const { error } = await supabase
-    .from("workspaces")
-    .update({ status: "inactive" })
-    .eq("id", workspaceId);
-
-  if (error) throw error;
-}
-
-//activate workspace
-async function activateWorkspace(workspaceId: string) {
-  const { error } = await supabase
-    .from("workspaces")
-    .update({ status: "active" })
-    .eq("id", workspaceId);
-
-  if (error) throw error;
-}
-
-async function confirmToggleWorkspace() {
-  if (!pendingWorkspace.value) return;
-
-  isTogglingWorkspace.value = true;
-  toggleError.value = null;
-
-  try {
-    if (isPendingWorkspaceInactive.value) {
-      await activateWorkspace(pendingWorkspace.value.id);
-    } else {
-      await deactivateWorkspace(pendingWorkspace.value.id);
-    }
-    isConfirmModalOpen.value = false;
-    pendingWorkspace.value = null;
-    await refreshLocation();
-  } catch (err) {
-    toggleError.value = normalizeSupabaseError(err).message;
-  } finally {
-    isTogglingWorkspace.value = false;
-  }
-}
-
-function addWorkspace() {
-  isAddWorkspaceModalOpen.value = true;
+  if(success) {await refreshLocation()}
 }
 </script>
 
 <template>
-  <section class=" flex flex-col lg:grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] ">
-    <aside class="rounded-2xl border border-border bg-card-bg p-3 ">
+  <section
+    class="flex flex-col lg:grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]"
+  >
+    <aside class="rounded-2xl border border-border bg-card-bg p-3">
       <p
         class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-heading"
       >
@@ -219,53 +148,45 @@ function addWorkspace() {
             {{ selectedWorkspaces.length }} units
           </span>
         </div>
-        <button
-          type="button"
-          disabled
-          class="hidden primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-600"
-          @click="addWorkspace"
-        >
-          Add Workspace
-        </button>
       </div>
       <div class="">
         <div
-          class="max-h-[calc(100vh-200px)] overflow-auto rounded-xl border border-border bg-bg"
+          class="max-h-[calc(100vh-200px)] overflow-auto rounded-xl border border-border"
         >
           <table class="w-full min-w-[620px] text-left text-sm">
-            <thead>
+            <thead class="sticky top-0 bg-border">
               <tr>
                 <th
                   scope="col"
-                  class="sticky -top-1 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
+                  class="sticky -top-1 z-10 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
                 >
                   ID
                 </th>
 
                 <th
                   scope="col"
-                  class="sticky -top-1 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
+                  class="sticky -top-1 z-10 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
                 >
                   Unit
                 </th>
 
                 <th
                   scope="col"
-                  class="sticky -top-1 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
+                  class="sticky -top-1 z-10 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
                 >
                   Capacity
                 </th>
 
                 <th
                   scope="col"
-                  class="sticky -top-1 z-10 bg-alt-bg px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
+                  class="sticky -top-1 z-10 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted"
                 >
                   Status
                 </th>
 
                 <th
                   scope="col"
-                  class="sticky -top-1 z-10 bg-alt-bg px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted"
+                  class="sticky -top-1 z-10 px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted"
                 >
                   Action
                 </th>
@@ -319,7 +240,7 @@ function addWorkspace() {
 
                 <td class="px-4 py-3 text-right">
                   <button
-                    @click="toggleWorkspace(workspace)"
+                    @click="toggleStatusUpdate(workspace)"
                     type="button"
                     class="border rounded-lg p-2"
                     :class="
@@ -359,11 +280,11 @@ function addWorkspace() {
       v-model="isConfirmModalOpen"
       :title="confirmModalTitle"
       :message="confirmModalMessage"
-      :confirm-label="isPendingWorkspaceInactive ? 'Activate' : 'Deactivate'"
-      :danger="!isPendingWorkspaceInactive"
+      :confirm-label="isCurrentWorkspaceInactive ? 'Activate' : 'Deactivate'"
+      :danger="!isCurrentWorkspaceInactive"
       :is-processing="isTogglingWorkspace"
-      :error="toggleError"
-      @confirm="confirmToggleWorkspace"
+      :error="updateError"
+      @confirm="handleStatusUpdate"
     />
   </section>
 </template>

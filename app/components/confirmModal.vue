@@ -1,4 +1,5 @@
 <script setup lang="ts">
+//the props are set so many so that it can be reused by any action that requires a confirmation
 const props = defineProps<{
   modelValue: boolean;
   title: string;
