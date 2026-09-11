@@ -28,7 +28,7 @@ const isAddWorkspaceModalOpen = ref(false); //modal opening control
 const locationSlug = computed(() => String(route.params.locationSlug ?? "")); //gets the locatio slug from the route
 
 const { location, isLocationPending, refreshLocation } =
-  usePageLocation(locationSlug);
+  useDymanicLocationInfo(locationSlug);
 
 const locationId = computed(() => location.value?.id ?? null);
 

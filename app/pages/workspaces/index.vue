@@ -8,7 +8,7 @@ definePageMeta({
   subtext: "Browse and filter workspace units across all locations.",
 });
 
-const { locations, pending, locationsError, refresh } = useLocations();
+const { locations, locationPending, locationsError, refresh } = useLocationsInfo();
 const supabase = useSupabaseClient<Database>();
 const searchQuery = ref("");
 const selectedLocation = ref("");
@@ -243,7 +243,7 @@ async function handleStatusUpdate() {
         </div>
       </div>
 
-      <div v-if="pending || availabilityPending" class="space-y-3 p-5">
+      <div v-if="locationPending || availabilityPending" class="space-y-3 p-5">
         <div
           v-for="index in 5"
           :key="index"

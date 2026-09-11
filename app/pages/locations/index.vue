@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import requirePermission from "~/middleware/require-permission";
-import type { LocationSummary } from "~/composables/useLocations";
 
 definePageMeta({
   title: "Locations",
@@ -12,11 +11,11 @@ definePageMeta({
 });
 
 const {
-  pending: locationPending,
+  locationPending,
   locationSummary,
   locationsError,
   refresh,
-} = useLocations(); //
+} = useLocationsInfo(); //
 const isEditLocationModalOpen = ref(false);
 
 const locationSlug = ref("");
