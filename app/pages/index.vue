@@ -12,7 +12,7 @@ definePageMeta({
 const supabase = useSupabaseClient<Database>();
 const { selected, range } = useDateRangeFilter(); // auto-imported, no manual import needed
 
-const { profile, pending: profilePending, isSuperAdmin } = useAdminProfile();
+const { profilePending, isSuperAdmin, scopeLabel } = useAdminProfile();
 
 type LocationOption = { id: number; location: string };
 
@@ -52,26 +52,6 @@ const {
   },
   { watch: [range, selectedLocationId] },
 );
-
-const { data: locationName } = useLazyAsyncData<string | null>(
-  "current-admin-location-name",
-  async () => {
-    if (!profile.value?.location_id) return null;
-    const { data } = await supabase
-      .from("locations")
-      .select("location")
-      .eq("id", profile.value.location_id)
-      .single();
-    return data?.location ?? null;
-  },
-  { watch: [profile] },
-);
-
-const scopeLabel = computed(() => {
-  if (isSuperAdmin.value) return "All locations";
-  if (locationName.value) return locationName.value;
-  return null;
-});
 
 type TrendRow =
   Database["public"]["Functions"]["dashboard_daily_trend"]["Returns"][number];
