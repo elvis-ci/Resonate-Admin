@@ -39,7 +39,7 @@ function close() {
 }
 
 const { location, isLocationPending, locationError } =
-  getLocationDetail(locationSlug);
+  useEditLocation(locationSlug);
 
 watch(
   () => props.modelValue,
