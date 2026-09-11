@@ -17,7 +17,7 @@ const selectedStatus = ref("");
 const selectedAvailability = ref("");
 
 const availabilityCheckedAt = new Date();
-const { data: workspaceBookings, pending: availabilityPending, refresh:refreshWorkspaces } =
+const { data: workspaceBookings, pending: availabilityPending } =
   useLazyAsyncData("workspace-availability", async () => {
     const { data, error } = await supabase
       .from("workspace_bookings")
