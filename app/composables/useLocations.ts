@@ -69,43 +69,6 @@ export type LocationDetail = {
   workspaces: LocationWorkspace[];
 };
 
-export function useDymanicLocationInfo(slug: MaybeRefOrGetter<string>) {
-  const supabase = useSupabaseClient<Database>();
-
-  const {
-    data: location,
-    pending: isLocationPending,
-    error: locationError,
-    refresh: refreshLocation,
-  } = useAsyncData(
-    () => `location-detail-${toValue(slug)}`,
-    async () => {
-      const locationSlug = toValue(slug);
-      if (!locationSlug) return null;
-
-      const { data, error } = await supabase
-        .from("locations")
-        .select(
-          `
-          id,
-          slug,
-          location,
-          city,
-          workspaces ( id, type, name, status, capacity )
-        `,
-        )
-        .eq("slug", locationSlug)
-        .single();
-
-      if (error) throw error;
-      return data as LocationDetail;
-    },
-    { watch: [() => toValue(slug)] },
-  );
-
-  return { location, isLocationPending, locationError, refreshLocation };
-}
-
 // export function getLocationDetail(slug: MaybeRefOrGetter<string>) {
 //   const supabase = useSupabaseClient<Database>();
 
