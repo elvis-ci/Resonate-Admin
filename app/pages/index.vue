@@ -10,10 +10,7 @@ definePageMeta({
 });
 
 const supabase = useSupabaseClient<Database>();
-const user = useSupabaseUser();
 const { selected, range } = useDateRangeFilter(); // auto-imported, no manual import needed
-
-type Profile = { role: string; location_id: number | null };
 
 const { profile, pending: profilePending, isSuperAdmin } = useAdminProfile();
 
