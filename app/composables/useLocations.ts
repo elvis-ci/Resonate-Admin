@@ -10,12 +10,12 @@ export type LocationSummary = {
   totalUnits: number;
 };
 
-export function useLocations() {
+export function useLocationsInfo() {
   const supabase = useSupabaseClient<Database>();
 
   const {
     data: locations,
-    pending,
+    pending: locationPending,
     error: locationsError,
     refresh,
   } = useLazyAsyncData("all-locations-with-workspaces", async () => {
@@ -50,7 +50,7 @@ export function useLocations() {
     })),
   );
 
-  return { locations, pending, locationSummary, locationsError, refresh };
+  return { locations, locationPending, locationSummary, locationsError, refresh };
 }
 
 export type LocationWorkspace = {
@@ -69,7 +69,7 @@ export type LocationDetail = {
   workspaces: LocationWorkspace[];
 };
 
-export function usePageLocation(slug: MaybeRefOrGetter<string>) {
+export function useDymanicLocationInfo(slug: MaybeRefOrGetter<string>) {
   const supabase = useSupabaseClient<Database>();
 
   const {
