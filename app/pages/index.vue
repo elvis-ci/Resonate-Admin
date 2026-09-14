@@ -1,7 +1,4 @@
 <script lang="ts" setup>
-import { computed, ref } from "vue";
-import type { Database } from "~/types/database";
-
 definePageMeta({
   title: "Overview",
   heading: "Dashboard overview",
@@ -9,228 +6,35 @@ definePageMeta({
     "A snapshot of bookings, activity, and performance across all locations.",
 });
 
-const supabase = useSupabaseClient<Database>();
-const { selected, range } = useDateRangeFilter(); // auto-imported, no manual import needed
+const { profile, isProfilePending, isSuperAdmin, scopeLabel } =
+  useAdminProfile();
 
-const { profilePending, isSuperAdmin, scopeLabel } = useAdminProfile();
+const { selected, range } = useDateRangeFilter();
+const { locations } = useLocationsInfo(); // assuming this already returns {id, location}[]
 
-type LocationOption = { id: number; location: string };
-
-const { data: locations } = useLazyAsyncData<LocationOption[]>(
-  "all-locations",
-  async () => {
-    const { data, error } = await supabase
-      .from("locations")
-      .select("id, location")
-      .order("location");
-    if (error) throw error;
-    return data ?? [];
-  },
-);
-
-// null = "All locations". Only meaningful for super_admin — the RPC ignores this value entirely for scoped admins and forces their own location server-side.
 const selectedLocationId = ref<number | null>(null);
 
-type DashboardOverviewRow =
-  Database["public"]["Functions"]["dashboard_overview_stats"]["Returns"][number];
-type Stats = DashboardOverviewRow | null;
-
 const {
-  data: stats,
+  stats,
   pending,
   error,
-} = useLazyAsyncData<Stats>(
-  "dashboard-overview-stats",
-  async () => {
-    const { data, error } = await supabase.rpc("dashboard_overview_stats", {
-      range_start: range.value.start.toISOString(),
-      range_end: range.value.end.toISOString(),
-      filter_location_id: selectedLocationId.value ?? undefined,
-    });
-    if (error) throw error;
-    return data?.[0] ?? null;
-  },
-  { watch: [range, selectedLocationId] },
-);
-
-type TrendRow =
-  Database["public"]["Functions"]["dashboard_daily_trend"]["Returns"][number];
-
-const { data: trend, pending: trendPending } = useLazyAsyncData<TrendRow[]>(
-  "dashboard-daily-trend",
-  async () => {
-    const { data, error } = await supabase.rpc("dashboard_daily_trend", {
-      range_start: range.value.start.toISOString(),
-      range_end: range.value.end.toISOString(),
-      filter_location_id: selectedLocationId.value ?? undefined,
-    });
-    if (error) throw error;
-    return data ?? [];
-  },
-  { watch: [range, selectedLocationId] },
-);
-
-type LocationBreakdownRow =
-  Database["public"]["Functions"]["dashboard_location_breakdown"]["Returns"][number];
-
-const { data: locationBreakdown } = useLazyAsyncData<LocationBreakdownRow[]>(
-  "dashboard-location-breakdown",
-  async () => {
-    // if (!isSuperAdmin.value || selectedLocationId.value !== null) return [];
-    const { data, error } = await supabase.rpc("dashboard_location_breakdown", {
-      range_start: range.value.start.toISOString(),
-      range_end: range.value.end.toISOString(),
-    });
-    if (error) throw error;
-    return data ?? [];
-  },
-  { watch: [range, selectedLocationId, isSuperAdmin] },
-);
-
-const showLocationBreakdown = computed(
-  () => isSuperAdmin.value && selectedLocationId.value === null,
-);
-
-type WorkspaceBreakdownRow =
-  Database["public"]["Functions"]["dashboard_workspace_breakdown"]["Returns"][number];
-
-const { data: workspaceBreakdown } = useLazyAsyncData<WorkspaceBreakdownRow[]>(
-  "dashboard-workspace-breakdown",
-  async () => {
-    const { data, error } = await supabase.rpc(
-      "dashboard_workspace_breakdown",
-      {
-        range_start: range.value.start.toISOString(),
-        range_end: range.value.end.toISOString(),
-        filter_location_id: selectedLocationId.value ?? undefined,
-      },
-    );
-    if (error) throw error;
-    return data ?? [];
-  },
-  { watch: [range, selectedLocationId] },
-);
-
-type UpcomingBooking = {
-  id: number;
-  booking_code: string;
-  guest_name: string | null;
-  start_at: string | null;
-  end_at: string | null;
-  status: string;
-  workspaces: { name: string | null; location_id: number | null } | null;
-};
-
-const { data: upcomingBookings } = useLazyAsyncData<UpcomingBooking[]>(
-  "upcoming-bookings",
-  async () => {
-    let query = supabase
-      .from("workspace_bookings")
-      .select(
-        "id, booking_code, guest_name, start_at, end_at, status, workspaces(name, location_id)",
-      )
-      .eq("status", "confirmed")
-      .gte("start_at", new Date().toISOString())
-      .order("start_at", { ascending: true })
-      .limit(6);
-
-    if (!isSuperAdmin.value && selectedLocationId.value !== null) {
-      query = query.eq("location_id", selectedLocationId.value);
-    }
-
-    const { data, error } = await query;
-    if (error) throw error;
-    return (data ?? []) as UpcomingBooking[];
-  },
-  { watch: [selectedLocationId, isSuperAdmin] },
-);
-
-// End time only needs hour:minute — the weekday/start already establishes the day.
-const endTimeFormatter = new Intl.DateTimeFormat("en-NG", {
-  hour: "numeric",
-  minute: "2-digit",
-});
-
-function formatBookingTimeRange(
-  startAt: string | null,
-  endAt: string | null,
-): string {
-  if (!startAt) return "—";
-  const start = timeFormatter.format(new Date(startAt));
-  if (!endAt) return start;
-  const end = endTimeFormatter.format(new Date(endAt));
-  return `${start} – ${end}`;
-}
-
-const currencyFormatter = new Intl.NumberFormat("en-NG", {
-  style: "currency",
-  currency: "NGN",
-});
-
-const timeFormatter = new Intl.DateTimeFormat("en-NG", {
-  weekday: "short",
-  hour: "numeric",
-  minute: "2-digit",
-});
-
-const allZero = computed(() => {
-  const s = stats.value;
-  if (!s) return false;
-  return (
-    s.total_revenue === 0 &&
-    s.booking_count === 0 &&
-    s.avg_booking_value === 0 &&
-    s.cancelled_count === 0 &&
-    s.no_show_count === 0
-  );
-});
-
-// ---- Period-over-period delta helper ----
-// Returns null when there's no prior-period baseline to compare against
-// (avoids a misleading "+∞%" or "-100%" on a from-zero comparison).
-function delta(current: number, prior: number): number | null {
-  if (prior === 0) return current === 0 ? 0 : null;
-  return ((current - prior) / prior) * 100;
-}
-
-const revenueDelta = computed(() =>
-  stats.value
-    ? delta(stats.value.total_revenue, stats.value.prior_total_revenue)
-    : null,
-);
-const bookingDelta = computed(() =>
-  stats.value
-    ? delta(stats.value.booking_count, stats.value.prior_booking_count)
-    : null,
-);
-const avgValueDelta = computed(() =>
-  stats.value
-    ? delta(stats.value.avg_booking_value, stats.value.prior_avg_booking_value)
-    : null,
-);
-// For cancellations/no-shows, a rise is bad — flip the "good" direction downstream.
-const cancelledDelta = computed(() =>
-  stats.value
-    ? delta(stats.value.cancelled_count, stats.value.prior_cancelled_count)
-    : null,
-);
-const noShowDelta = computed(() =>
-  stats.value
-    ? delta(stats.value.no_show_count, stats.value.prior_no_show_count)
-    : null,
-);
-
-function formatDelta(pct: number | null): string {
-  if (pct === null) return "";
-  const sign = pct > 0 ? "+" : "";
-  return `${sign}${pct.toFixed(1)}%`;
-}
-
-function deltaColor(pct: number | null, lowerIsBetter = false): string {
-  if (pct === null || pct === 0) return "text-muted";
-  const isFavorable = lowerIsBetter ? pct < 0 : pct > 0;
-  return isFavorable ? "text-emerald-600" : "text-red-600";
-}
+  allZero,
+  trend,
+  trendPending,
+  chartSeries,
+  chartOptions,
+  locationBreakdownPending,
+  locationBreakdown,
+  workspaceBreakdownPending,
+  workspaceBreakdown,
+  showLocationBreakdown,
+  upcomingBookings,
+  revenueDelta,
+  bookingDelta,
+  avgValueDelta,
+  cancelledDelta,
+  noShowDelta,
+} = useDashboardData(range, selectedLocationId, isSuperAdmin);
 
 const dateRangeOptions = [
   "yesterday",
@@ -246,68 +50,14 @@ const dateRangeLabels: Record<(typeof dateRangeOptions)[number], string> = {
   last_30_days: "Last 30 days",
 };
 
-const priorPeriod = computed(() => {
-  switch (selected.value) {
-    case "yesterday":
-      return "the day before";
-    case "today":
-      return "yesterday";
-    case "past_week":
-      return "previous week";
-    case "last_30_days":
-      return "the previous 30 days";
-    default:
-      return "";
-  }
-});
+const priorPeriodLabels: Record<(typeof dateRangeOptions)[number], string> = {
+  yesterday: "the day before",
+  today: "yesterday",
+  past_week: "previous week",
+  last_30_days: "the previous 30 days",
+};
 
-const chartSeries = computed(() => {
-  return [
-    {
-      name: "Revenue",
-      data: (trend.value ?? []).map((r) => ({
-        x: new Date(r.day).getTime(),
-        y: r.revenue,
-      })),
-    },
-  ];
-});
-
-const chartOptions = computed(() => ({
-  chart: { toolbar: { show: false }, background: "transparent" },
-  xaxis: {
-    type: "datetime",
-    labels: {
-      format: "MMM d",
-      style: {
-        colors: "var(--color-muted, #6b7280)",
-        fontSize: "12px",
-        fontWeight: 500,
-      },
-    },
-    axisBorder: { color: "var(--color-border, #e5e7eb)" },
-    axisTicks: { color: "var(--color-border, #e5e7eb)" },
-  },
-  yaxis: {
-    labels: {
-      formatter: (val: number) => currencyFormatter.format(val),
-      style: {
-        colors: "var(--color-muted, #6b7280)",
-        fontSize: "12px",
-      },
-    },
-  },
-  tooltip: {
-    x: { format: "EEE, MMM d" },
-    y: { formatter: (val: number) => currencyFormatter.format(val) },
-  },
-  stroke: { curve: "smooth", width: 2 },
-  colors: ["#6366f1"],
-  grid: {
-    borderColor: "var(--color-border, #e5e7eb)",
-    strokeDashArray: 4, // dashed gridlines, optional touch
-  },
-}));
+const priorPeriod = computed(() => priorPeriodLabels[selected.value] ?? "");
 </script>
 
 <template>
@@ -315,8 +65,8 @@ const chartOptions = computed(() => ({
     <div class="flex flex-wrap items-center justify-between gap-3">
       <!-- Scope control loading placeholder: profile hasn't resolved yet -->
       <div
-        v-if="profilePending"
-        class="h-7 w-32 rounded-full bg-alt-bg animate-pulse"
+        v-if="isProfilePending"
+        class="h-7 w-32 rounded-full bg-alt-bg2 animate-pulse"
       />
 
       <!-- Super admin: interactive location filter -->
@@ -334,7 +84,7 @@ const chartOptions = computed(() => ({
       <!-- Scoped admin: static, non-interactive badge -->
       <span
         v-else-if="scopeLabel"
-        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-alt-bg text-heading"
+        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-alt-bg2 text-heading"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -400,7 +150,7 @@ const chartOptions = computed(() => ({
     <div v-else-if="stats" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
       <!-- Revenue -->
       <div
-        class="rounded-2xl bg-alt-bg p-5 hover:border-primary/30 transition-colors shadow-elev"
+        class="rounded-2xl bg-alt-bg2 p-5 hover:border-primary/30 transition-colors shadow-elev"
       >
         <div class="flex items-start justify-between">
           <div class="flex-1">
@@ -442,7 +192,7 @@ const chartOptions = computed(() => ({
 
       <!-- Bookings -->
       <div
-        class="rounded-2xl bg-alt-bg p-5 hover:border-primary/30 transition-colors shadow-elev"
+        class="rounded-2xl bg-alt-bg2 p-5 hover:border-primary/30 transition-colors shadow-elev"
       >
         <div class="flex items-start justify-between">
           <div class="flex-1">
@@ -483,7 +233,7 @@ const chartOptions = computed(() => ({
 
       <!-- Avg. Booking Value -->
       <div
-        class="rounded-2xl bg-alt-bg p-5 hover:border-primary/30 transition-colors shadow-elev"
+        class="rounded-2xl bg-alt-bg2 p-5 hover:border-primary/30 transition-colors shadow-elev"
       >
         <div class="flex items-start justify-between">
           <div class="flex-1">
@@ -524,7 +274,7 @@ const chartOptions = computed(() => ({
 
       <!-- Cancellations -->
       <div
-        class="rounded-2xl bg-alt-bg p-5 hover:border-primary/30 transition-colors shadow-elev"
+        class="rounded-2xl bg-alt-bg2 p-5 hover:border-primary/30 transition-colors shadow-elev"
       >
         <div class="flex items-start justify-between">
           <div class="flex-1">
@@ -567,14 +317,14 @@ const chartOptions = computed(() => ({
       </div>
     </div>
 
-    <div v-else class="rounded-2xl bg-alt-bg p-5 text-muted">
+    <div v-else class="rounded-2xl bg-alt-bg2 p-5 text-muted">
       Loading dashboard overview...
     </div>
   </section>
 
   <section class="mt-6">
     <!-- Revenue trend -->
-    <div class="rounded-2xl bg-alt-bg p-5 shadow-elev">
+    <div class="rounded-2xl bg-alt-bg2 p-5 shadow-elev">
       <p
         class="text-sm font-semibold uppercase primary tracking-[0.1em] text-muted mb-4"
       >
@@ -609,12 +359,8 @@ const chartOptions = computed(() => ({
     >
       <!-- By location (super admin, "All locations" view only) -->
       <div
-        v-if="
-          showLocationBreakdown &&
-          locationBreakdown &&
-          locationBreakdown.length > 0
-        "
-        class="rounded-2xl bg-alt-bg p-5 shadow-elev overflow-x-auto"
+        v-if="showLocationBreakdown"
+        class="rounded-2xl bg-alt-bg2 p-5 shadow-elev overflow-x-auto"
       >
         <p
           class="text-sm font-semibold uppercase primary tracking-[0.1em] text-muted mb-4"
@@ -631,6 +377,18 @@ const chartOptions = computed(() => ({
           </thead>
           <tbody>
             <tr
+              v-if="locationBreakdownPending"
+              v-for="index in 5"
+              :key="index"
+              class=""
+            >
+              <td v-for="index in 3" :key="index" class="h-15 px-2">
+                <div class="h-[50%] bg-muted/20 animate-pulse rounded-sm"></div>
+              </td>
+            </tr>
+
+            <tr
+              v-else
               v-for="row in locationBreakdown"
               :key="row.location_id"
               class="border-b border-border last:border-0"
@@ -650,10 +408,7 @@ const chartOptions = computed(() => ({
       <!-- By workspace — every admin sees this, scoped to their location
            server-side; super admin sees the current location filter (or
            top workspaces across all locations when unfiltered). -->
-      <div
-        v-if="workspaceBreakdown && workspaceBreakdown.length > 0"
-        class="rounded-2xl bg-alt-bg p-5 shadow-elev overflow-x-auto"
-      >
+      <div class="rounded-2xl bg-alt-bg2 p-5 shadow-elev overflow-x-auto">
         <p
           class="text-sm font-semibold uppercase primary tracking-[0.1em] text-muted mb-4"
         >
@@ -669,6 +424,18 @@ const chartOptions = computed(() => ({
           </thead>
           <tbody>
             <tr
+              v-if="workspaceBreakdownPending"
+              v-for="index in 5"
+              :key="index"
+              class=""
+            >
+              <td v-for="index in 3" :key="index" class="h-15 px-2">
+                <div class="h-[50%] bg-muted/20 animate-pulse rounded-sm"></div>
+              </td>
+            </tr>
+
+            <tr
+              v-else
               v-for="row in workspaceBreakdown"
               :key="row.workspace_id"
               class="border-b border-border last:border-0"
@@ -696,7 +463,7 @@ const chartOptions = computed(() => ({
     <!-- Upcoming bookings -->
     <div
       v-if="upcomingBookings && upcomingBookings.length > 0"
-      class="rounded-2xl bg-alt-bg p-5 shadow-elev"
+      class="rounded-2xl bg-alt-bg2 p-5 shadow-elev"
     >
       <p
         class="text-sm font-semibold uppercase primary tracking-[0.1em] text-muted mb-4"
@@ -730,7 +497,7 @@ const chartOptions = computed(() => ({
     </div>
     <div
       v-else-if="upcomingBookings"
-      class="rounded-2xl bg-alt-bg p-5 text-muted"
+      class="rounded-2xl bg-alt-bg2 p-5 text-muted"
     >
       No upcoming bookings in the next few days.
     </div>
