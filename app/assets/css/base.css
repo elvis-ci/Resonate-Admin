@@ -8,6 +8,7 @@
     --color-scrollbar-thumb-hover: #a8a8a8;
     --color-bg: #ffff;
     --color-alt-bg: #f9fafb;
+    --color-alt-bg2: #f9fafb;
     --color-error-bg: #fef2f2;
     --color-error-text: #b91c1c;
 
@@ -51,6 +52,7 @@
   --color-scrollbar-thumb-hover: rgba(181, 197, 219, 0.5);
   --color-bg: #0f172a;
   --color-alt-bg: #111827;
+  --color-alt-bg2: #0e1422;
 
   --color-error-bg: #fef2f2;
   --color-error-text: #b91c1c;
