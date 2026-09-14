@@ -3,7 +3,7 @@
     class="flex justify-between rounded-2xl border border-border bg-alt-bg2 p-4 shadow-elev"
   >
     <div>
-      <p class="text-sm uppercase tracking-[0.2em] primary text-primary">
+      <p class="text-sm font-bold uppercase tracking-[0.2em] primary text-primary">
         {{ title }}
       </p>
       <h1 class="main-heading mt-1">{{ heading }}</h1>
