@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Database } from "~/types/database";
-import { formatWorkspaceType } from "~/utils/formatWorkspaceType.ts";
+import { formatWorkspaceType } from "~/utils/formatters";
 
 definePageMeta({
   title: "Workspaces",
@@ -8,7 +8,8 @@ definePageMeta({
   subtext: "Browse and filter workspace units across all locations.",
 });
 
-const { locations, locationPending, locationsError, refresh } = useLocationsInfo();
+const { locations, locationPending, locationsError, refresh } =
+  useLocationsInfo();
 const supabase = useSupabaseClient<Database>();
 const searchQuery = ref("");
 const selectedLocation = ref("");
@@ -152,10 +153,10 @@ const {
 async function handleStatusUpdate() {
   const success = await confirmStatusUpdate();
 
-  if(success) {await refresh()}
+  if (success) {
+    await refresh();
+  }
 }
-
-
 </script>
 
 <template>
@@ -291,20 +292,18 @@ async function handleStatusUpdate() {
                 {{ formatWorkspaceType(workspace.type) }}
               </td>
               <td class="px-5 py-4 text-body">{{ workspace.capacity || 1 }}</td>
-                <td class="px-4 py-3">
-                  <span
-                    class="rounded-full px-2 py-1 text-xs font-semibold"
-                    :class="
-                      workspace.status === 'inactive'
-                        ? ' bg-red-100 text-red-700'
-                        : 'bg-emerald-100 text-emerald-700'
-                    "
-                  >
-                    {{
-                      workspace.status === "inactive" ? "Inactive" : "Active"
-                    }}
-                  </span>
-                </td>
+              <td class="px-4 py-3">
+                <span
+                  class="rounded-full px-2 py-1 text-xs font-semibold"
+                  :class="
+                    workspace.status === 'inactive'
+                      ? ' bg-red-100 text-red-700'
+                      : 'bg-emerald-100 text-emerald-700'
+                  "
+                >
+                  {{ workspace.status === "inactive" ? "Inactive" : "Active" }}
+                </span>
+              </td>
               <td class="px-5 py-4">
                 <span
                   class="rounded-full px-2.5 py-1 text-xs font-semibold"

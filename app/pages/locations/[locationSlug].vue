@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Database } from "~/types/database";
 import { normalizeSupabaseError } from "~/utils/errors.ts";
-import { formatWorkspaceType } from "~/utils/formatWorkspaceType.ts";
+import { formatWorkspaceType } from "~/utils/formatters";
 
 const route = useRoute();
 
@@ -83,7 +83,9 @@ const {
 async function handleStatusUpdate() {
   const success = await confirmStatusUpdate();
 
-  if(success) {await refreshLocation()}
+  if (success) {
+    await refreshLocation();
+  }
 }
 </script>
 

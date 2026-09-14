@@ -52,20 +52,3 @@ export function useLocationsInfo() {
 
   return { locations, locationPending, locationSummary, locationsError, refresh };
 }
-
-export type LocationWorkspace = {
-  id: string;
-  type: string;
-  name: string | null;
-  status: string | null;
-  capacity: number | null;
-};
-
-export type LocationDetail = {
-  id: number;
-  slug: string;
-  location: string;
-  city: string;
-  workspaces: LocationWorkspace[];
-};
-
