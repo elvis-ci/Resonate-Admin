@@ -8,7 +8,7 @@ const { theme, toggle } = useTheme();
 const isSigningOut = ref(false);
 const signOutError = ref("");
 
-const { profile, pending: isProfilePending, isSuperAdmin } = useAdminProfile();
+const { profile, isProfilePending, isSuperAdmin } = useAdminProfile();
 const adminName = computed(() => profile.value?.full_name || "Administrator");
 const adminRole = computed(() => {
   const role = profile.value?.role;

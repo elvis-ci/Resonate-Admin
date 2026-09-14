@@ -10,7 +10,7 @@ export type AdminProfile = {
 export function useAdminProfile() {
   const supabase = useSupabaseClient<Database>();
   const user = useSupabaseUser();
-  const { data: profile, pending: profilePending } =
+  const { data: profile, pending: isProfilePending } =
     useLazyAsyncData<AdminProfile | null>(
       "current-profile",
       async () => {
@@ -48,5 +48,5 @@ export function useAdminProfile() {
     return null;
   });
 
-  return { profile, profilePending, isSuperAdmin, adminLocationName, scopeLabel };
+  return { profile, isProfilePending, isSuperAdmin, adminLocationName, scopeLabel };
 }
