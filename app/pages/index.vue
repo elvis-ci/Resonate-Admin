@@ -152,41 +152,37 @@ const priorPeriod = computed(() => priorPeriodLabels[selected.value] ?? "");
       <div
         class="rounded-2xl bg-alt-bg2 p-5 hover:border-primary/30 transition-colors shadow-elev"
       >
-        <div class="">
-          <div class="flex justify-between items-center">
-            <p
-              class="text-sm font-semibold uppercase tracking-[0.1em] primary text-muted"
-            >
-              Revenue
-            </p>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="w-5 h-5 lg:w-7 lg:h-7 text-primary rounded-lg bg-primary/10 "
-            >
-              <path
-                d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-              />
-            </svg>
-          </div>
-          <div
-            class=""
+        <div class="flex justify-between items-center">
+          <p
+            class="text-sm font-semibold uppercase tracking-[0.1em] primary text-muted"
           >
-            <p class="text-base lg:text-2xl font-bold mt-3">
-              {{ currencyFormatter.format(stats.total_revenue) }}
-            </p>
-            <p
-              v-if="revenueDelta !== null"
-              :class="['text-xs font-semibold mt-1', deltaColor(revenueDelta)]"
-            >
-              {{ formatDelta(revenueDelta) }} from {{ priorPeriod }}
-            </p>
-          </div>
+            Revenue
+          </p>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-5 h-5 lg:w-7 lg:h-7 text-primary rounded-lg bg-primary/10"
+          >
+            <path
+              d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+            />
+          </svg>
+        </div>
+        <div class="">
+          <p class="text-base lg:text-2xl font-bold mt-3">
+            {{ currencyFormatter.format(stats.total_revenue) }}
+          </p>
+          <p
+            v-if="revenueDelta !== null"
+            :class="['text-xs font-semibold mt-1', deltaColor(revenueDelta)]"
+          >
+            {{ formatDelta(revenueDelta) }} from {{ priorPeriod }}
+          </p>
         </div>
       </div>
 
@@ -194,40 +190,36 @@ const priorPeriod = computed(() => priorPeriodLabels[selected.value] ?? "");
       <div
         class="rounded-2xl bg-alt-bg2 p-5 hover:border-primary/30 transition-colors shadow-elev"
       >
-        <div class="flex items-start justify-between">
-          <div class="flex-1">
-            <p
-              class="text-sm font-semibold uppercase primary tracking-[0.1em] text-muted"
-            >
-              Bookings
-            </p>
-            <p class="text-2xl font-bold mt-3">
-              {{ stats.booking_count }}
-            </p>
-            <p
-              v-if="bookingDelta !== null"
-              :class="['text-xs font-semibold mt-1', deltaColor(bookingDelta)]"
-            >
-              {{ formatDelta(bookingDelta) }} from {{ priorPeriod }}
-            </p>
-          </div>
-          <div
-            class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
+        <div class="flex justify-between items-center">
+          <p
+            class="text-sm font-semibold uppercase tracking-[0.1em] primary text-muted"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="w-6 h-6 text-primary"
-            >
-              <rect x="3" y="4" width="18" height="18" rx="2" />
-              <path d="M16 2v4M8 2v4M3 10h18" />
-            </svg>
-          </div>
+            Bookings
+          </p>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-5 h-5 lg:w-7 lg:h-7 text-primary rounded-lg bg-primary/10"
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <path d="M16 2v4M8 2v4M3 10h18" />
+          </svg>
+        </div>
+        <div class="">
+          <p class="text-base lg:text-2xl font-bold mt-3">
+            {{ stats.booking_count }}
+          </p>
+          <p
+            v-if="revenueDelta !== null"
+            :class="['text-xs font-semibold mt-1', deltaColor(bookingDelta)]"
+          >
+            {{ formatDelta(bookingDelta) }} from {{ priorPeriod }}
+          </p>
         </div>
       </div>
 
@@ -235,40 +227,36 @@ const priorPeriod = computed(() => priorPeriodLabels[selected.value] ?? "");
       <div
         class="rounded-2xl bg-alt-bg2 p-5 hover:border-primary/30 transition-colors shadow-elev"
       >
-        <div class="flex items-start justify-between">
-          <div class="flex-1">
-            <p
-              class="text-sm font-semibold uppercase tracking-[0.1em] primary text-muted"
-            >
-              Avg. Value
-            </p>
-            <p class="text-2xl font-bold mt-3">
-              {{ currencyFormatter.format(stats.avg_booking_value) }}
-            </p>
-            <p
-              v-if="avgValueDelta !== null"
-              :class="['text-xs font-semibold mt-1', deltaColor(avgValueDelta)]"
-            >
-              {{ formatDelta(avgValueDelta) }} from {{ priorPeriod }}
-            </p>
-          </div>
-          <div
-            class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
+        <div class="flex justify-between items-center">
+          <p
+            class="text-sm font-semibold uppercase tracking-[0.1em] primary text-muted"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="w-6 h-6 text-primary"
-            >
-              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-              <polyline points="17 6 23 6 23 12" />
-            </svg>
-          </div>
+            Avg. Value
+          </p>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-5 h-5 lg:w-7 lg:h-7 text-primary rounded-lg bg-primary/10"
+          >
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+            <polyline points="17 6 23 6 23 12" />
+          </svg>
+        </div>
+        <div class="">
+          <p class="text-base lg:text-2xl font-bold mt-3">
+            {{ currencyFormatter.format(stats.avg_booking_value) }}
+          </p>
+          <p
+            v-if="revenueDelta !== null"
+            :class="['text-xs font-semibold mt-1', deltaColor(avgValueDelta)]"
+          >
+            {{ formatDelta(avgValueDelta) }} from {{ priorPeriod }}
+          </p>
         </div>
       </div>
 
@@ -276,43 +264,39 @@ const priorPeriod = computed(() => priorPeriodLabels[selected.value] ?? "");
       <div
         class="rounded-2xl bg-alt-bg2 p-5 hover:border-primary/30 transition-colors shadow-elev"
       >
-        <div class="flex items-start justify-between">
-          <div class="flex-1">
-            <p
-              class="text-sm font-semibold uppercase tracking-[0.1em] primary text-muted"
-            >
-              Cancellations
-            </p>
-            <p class="text-2xl font-bold mt-3">
-              {{ stats.cancelled_count }}
-            </p>
-            <p
-              v-if="cancelledDelta !== null"
-              :class="[
-                'text-xs font-semibold mt-1',
-                deltaColor(cancelledDelta, true),
-              ]"
-            >
-              {{ formatDelta(cancelledDelta) }} from {{ priorPeriod }}
-            </p>
-          </div>
-          <div
-            class="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0"
+        <div class="flex justify-between items-center">
+          <p
+            class="text-sm font-semibold uppercase tracking-[0.1em] primary text-muted"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="w-6 h-6 text-warning"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M8 12h8M12 8v8" />
-            </svg>
-          </div>
+            Avg. Value
+          </p>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-5 h-5 lg:w-7 lg:h-7 text-warning"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="M8 12h8M12 8v8" />
+          </svg>
+        </div>
+        <div class="">
+          <p class="text-base lg:text-2xl font-bold mt-3">
+            {{ stats.cancelled_count }}
+          </p>
+          <p
+            v-if="revenueDelta !== null"
+            :class="[
+              'text-xs font-semibold mt-1',
+              deltaColor(cancelledDelta, true),
+            ]"
+          >
+            {{ formatDelta(cancelledDelta) }} from {{ priorPeriod }}
+          </p>
         </div>
       </div>
     </div>
