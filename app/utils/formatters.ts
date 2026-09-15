@@ -1,4 +1,3 @@
-
 //format workspace type 
 export function formatWorkspaceType(type: string): string {
   return type
@@ -12,6 +11,16 @@ export const currencyFormatter = new Intl.NumberFormat("en-NG", {
   style: "currency",
   currency: "NGN",
 });
+
+// Compact form for large values — e.g. ₦20.5M instead of ₦20,500,000.00
+export const compactCurrencyFormatter = new Intl.NumberFormat("en-NG", {
+  style: "currency",
+  currency: "NGN",
+  notation: "compact",
+  compactDisplay: "short",
+  maximumFractionDigits: 4,
+  minimumFractionDigits: 4
+}); 
 
 export const timeFormatter = new Intl.DateTimeFormat("en-NG", {
   weekday: "short",
