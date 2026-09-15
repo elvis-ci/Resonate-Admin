@@ -61,7 +61,7 @@ const priorPeriod = computed(() => priorPeriodLabels[selected.value] ?? "");
 </script>
 
 <template>
-  <section class="space-y-6">
+  <section class="space-y-6 max-w-screen">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <!-- Scope control loading placeholder: profile hasn't resolved yet -->
       <div
@@ -147,31 +147,18 @@ const priorPeriod = computed(() => priorPeriodLabels[selected.value] ?? "");
       </div>
     </div>
 
-    <div v-else-if="stats" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div v-else-if="stats" class="grid gap-6 grid-cols-2 lg:grid-cols-4">
       <!-- Revenue -->
       <div
         class="rounded-2xl bg-alt-bg2 p-5 hover:border-primary/30 transition-colors shadow-elev"
       >
-        <div class="flex items-start justify-between">
-          <div class="flex-1">
+        <div class="">
+          <div class="flex justify-between items-center">
             <p
               class="text-sm font-semibold uppercase tracking-[0.1em] primary text-muted"
             >
               Revenue
             </p>
-            <p class="text-2xl font-bold mt-3">
-              {{ currencyFormatter.format(stats.total_revenue) }}
-            </p>
-            <p
-              v-if="revenueDelta !== null"
-              :class="['text-xs font-semibold mt-1', deltaColor(revenueDelta)]"
-            >
-              {{ formatDelta(revenueDelta) }} from {{ priorPeriod }}
-            </p>
-          </div>
-          <div
-            class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
-          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -180,12 +167,25 @@ const priorPeriod = computed(() => priorPeriodLabels[selected.value] ?? "");
               stroke-width="2"
               stroke-linecap="round"
               stroke-linejoin="round"
-              class="w-6 h-6 text-primary"
+              class="w-5 h-5 lg:w-7 lg:h-7 text-primary rounded-lg bg-primary/10 "
             >
               <path
                 d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
               />
             </svg>
+          </div>
+          <div
+            class=""
+          >
+            <p class="text-base lg:text-2xl font-bold mt-3">
+              {{ currencyFormatter.format(stats.total_revenue) }}
+            </p>
+            <p
+              v-if="revenueDelta !== null"
+              :class="['text-xs font-semibold mt-1', deltaColor(revenueDelta)]"
+            >
+              {{ formatDelta(revenueDelta) }} from {{ priorPeriod }}
+            </p>
           </div>
         </div>
       </div>
@@ -322,7 +322,7 @@ const priorPeriod = computed(() => priorPeriodLabels[selected.value] ?? "");
     </div>
   </section>
 
-  <section class="mt-6">
+  <section class="mt-6 max-w-screen">
     <!-- Revenue trend -->
     <div class="rounded-2xl bg-alt-bg2 p-5 shadow-elev">
       <p
