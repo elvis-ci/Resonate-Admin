@@ -149,32 +149,106 @@ export function useDashboardData(
     },
   ]);
 
-  const chartOptions = computed(() => ({
-    chart: { toolbar: { show: false }, background: "transparent" },
-    xaxis: {
-      type: "datetime",
-      labels: {
-        format: "MMM d",
-        style: { colors: "var(--color-muted, #6b7280)", fontSize: "12px", fontWeight: 500 },
-      },
-      axisBorder: { color: "var(--color-border, #e5e7eb)" },
-      axisTicks: { color: "var(--color-border, #e5e7eb)" },
+const chartOptions = computed(() => ({
+  chart: {
+    type: "line",
+    toolbar: {
+      show: false,
     },
-    yaxis: {
-      labels: {
-        formatter: (val: number) => currencyFormatter.format(val),
-        style: { colors: "var(--color-muted, #6b7280)", fontSize: "12px" },
-      },
+    zoom: {
+      enabled: false,
     },
-    tooltip: {
-      x: { format: "EEE, MMM d" },
-      y: { formatter: (val: number) => currencyFormatter.format(val) },
-    },
-    stroke: { curve: "smooth", width: 2 },
-    colors: ["#6366f1"],
-    grid: { borderColor: "var(--color-border, #e5e7eb)", strokeDashArray: 4 },
-  }));
+    background: "transparent",
+    fontFamily: "Nunito, system-ui, sans-serif",
+  },
 
+  colors: ["var(--color-primary-hover)"],
+
+  stroke: {
+    curve: "smooth",
+    width: 2,
+  },
+
+  markers: {
+    size: 0,
+    hover: {
+      size: 5,
+    },
+  },
+
+  grid: {
+    borderColor: "var(--color-border)",
+    strokeDashArray: 4,
+    xaxis: {
+      lines: {
+        show: false,
+      },
+    },
+  },
+
+  xaxis: {
+    type: "datetime",
+
+    labels: {
+      format: "MMM d",
+      style: {
+        colors: "var(--color-muted)",
+        fontSize: "12px",
+        fontWeight: 500,
+        fontFamily: "Nunito, system-ui, sans-serif",
+      },
+    },
+
+    axisBorder: {
+      color: "var(--color-border)",
+    },
+
+    axisTicks: {
+      color: "var(--color-border)",
+    },
+
+    tooltip: {
+      enabled: false,
+    },
+  },
+
+  yaxis: {
+    labels: {
+      formatter: (val: number) => compactCurrencyFormatter.format(val),
+
+      style: {
+        colors: "var(--color-muted)",
+        fontSize: "12px",
+        fontWeight: 500,
+        fontFamily: "Nunito, system-ui, sans-serif",
+      },
+    },
+  },
+
+  tooltip: {
+    theme: "dark",
+
+    x: {
+      format: "MMM d yyyy",
+    },
+
+    y: {
+      formatter: (val: number) => compactCurrencyFormatter.format(val),
+    },
+  },
+
+  noData: {
+    text: "No revenue data for this period",
+    align: "center",
+    verticalAlign: "middle",
+
+    style: {
+      color: "var(--color-muted)",
+      fontFamily: "Nunito, system-ui, sans-serif",
+      fontSize: "14px",
+    },
+  },
+}));
   return {
     stats, pending, error, allZero,
     trend, trendPending, chartSeries, chartOptions, locationBreakdownPending,
