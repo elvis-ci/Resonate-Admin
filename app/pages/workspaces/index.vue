@@ -6,17 +6,21 @@ definePageMeta({
   title: "Workspaces",
   heading: "Manage workspaces",
   subtext: "Browse and filter workspace units across all locations.",
+  ssr: true,
 });
 
-const { locations, locationPending, locationsError, refresh } =
-  useLocationsInfo();
+const {
+  scopedLocations,
+  scopedLocationsPending,
+  scopedLocationsError,
+  refresh,
+} = useScopedLocation();
 const supabase = useSupabaseClient<Database>();
 const searchQuery = ref("");
 const selectedLocation = ref("");
 const selectedWorkspaceType = ref("");
 const selectedStatus = ref("");
 const selectedAvailability = ref("");
-
 const availabilityCheckedAt = new Date();
 const { data: workspaceBookings, pending: availabilityPending } =
   useLazyAsyncData("workspace-availability", async () => {
@@ -94,7 +98,7 @@ function formatNextAvailableTime(workspaceId: string) {
 }
 
 const workspaceRows = computed(() =>
-  (locations.value ?? []).flatMap((location) =>
+  (scopedLocations.value ?? []).flatMap((location) =>
     (location.workspaces ?? []).map((workspace) => ({
       ...workspace,
       locationId: location.id,
@@ -157,6 +161,19 @@ async function handleStatusUpdate() {
     await refresh();
   }
 }
+
+watch(
+  scopedLocations,
+  (value) => {
+    const first = value?.[0];
+    if (value?.length === 1 && first) {
+      selectedLocation.value = String(first.id);
+    } else {
+      selectedLocation.value = "";
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -189,9 +206,11 @@ async function handleStatusUpdate() {
                 v-model="selectedLocation"
                 class="w-full rounded-xl border border-border bg-bg px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
-                <option value="">All locations</option>
+                <option v-if="(scopedLocations?.length ?? 0) > 1" value="">
+                  All locations
+                </option>
                 <option
-                  v-for="location in locations"
+                  v-for="location in scopedLocations"
                   :key="location.id"
                   :value="String(location.id)"
                 >
@@ -244,21 +263,11 @@ async function handleStatusUpdate() {
         </div>
       </div>
 
-      <div v-if="locationPending || availabilityPending" class="space-y-3 p-5">
-        <div
-          v-for="index in 5"
-          :key="index"
-          class="h-12 animate-pulse rounded-xl bg-muted/10"
-        />
-      </div>
-      <p v-else-if="locationsError" class="p-5 text-sm text-red-700">
+      <p v-if="scopedLocationsError" class="p-5 text-sm text-red-700">
         Unable to load workspaces. Please try again.
       </p>
 
-      <div
-        v-else-if="filteredWorkspaces.length"
-        class="sticky top-0 max-h-[80vh] overflow-auto pb-4"
-      >
+      <div class="sticky top-0 max-h-[80vh] overflow-auto pb-4">
         <table class="w-full min-w-[920px] text-left text-sm">
           <thead
             class="border-b border-border sticky top-0 z-10 bg-border text-xs uppercase tracking-wider text-muted"
@@ -280,6 +289,18 @@ async function handleStatusUpdate() {
           </thead>
           <tbody class="divide-y divide-border">
             <tr
+              v-if="scopedLocationsPending"
+              v-for="index in 5"
+              :key="index"
+              class=""
+            >
+              <td v-for="index in 8" :key="index" class="h-15 px-2">
+                <div class="h-[50%] bg-muted/20 animate-pulse rounded-sm"></div>
+              </td>
+            </tr>
+
+            <tr
+              v-else-if="filteredWorkspaces.length"
               v-for="workspace in filteredWorkspaces"
               :key="workspace.id"
               class="hover:bg-card-bg2/60 odd:bg-card-bg even:bg-card-bg2/40"
@@ -340,11 +361,15 @@ async function handleStatusUpdate() {
                 </button>
               </td>
             </tr>
+            <tr v-else class="">
+              <td class="h-15 px-2">
+                <div class="p-10 text-center text-sm text-muted">
+                  No workspace units match the current filters.
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
-      </div>
-      <div v-else class="p-10 text-center text-sm text-muted">
-        No workspace units match the current filters.
       </div>
     </article>
 
