@@ -1,22 +1,41 @@
 <script setup lang="ts">
 import type { Database } from "~/types/database";
-import { formatWorkspaceType } from "~/utils/formatters";
+import { currencyFormatter, formatWorkspaceType } from "~/utils/formatters";
+
+type EditableWorkspace = Pick<
+  Database["public"]["Tables"]["workspaces"]["Row"],
+  | "id"
+  | "name"
+  | "type"
+  | "capacity"
+  | "base_price"
+  | "booking_price"
+  | "status"
+>;
 
 definePageMeta({
   title: "Workspaces",
   heading: "Manage workspaces",
   subtext: "Browse and filter workspace units across all locations.",
+  ssr: true,
 });
 
-const { locations, locationPending, locationsError, refresh } =
-  useLocationsInfo();
+const {
+  scopedLocations,
+  scopedLocationsPending,
+  scopedLocationsError,
+  refresh,
+} = useScopedLocation();
 const supabase = useSupabaseClient<Database>();
 const searchQuery = ref("");
 const selectedLocation = ref("");
 const selectedWorkspaceType = ref("");
 const selectedStatus = ref("");
 const selectedAvailability = ref("");
-
+const route = useRoute();
+const isAddWorkspaceModalOpen = ref(false);
+const isEditWorkspaceModalOpen = ref(false);
+const selectedWorkspace = ref<EditableWorkspace | null>(null);
 const availabilityCheckedAt = new Date();
 const { data: workspaceBookings, pending: availabilityPending } =
   useLazyAsyncData("workspace-availability", async () => {
@@ -94,18 +113,59 @@ function formatNextAvailableTime(workspaceId: string) {
 }
 
 const workspaceRows = computed(() =>
-  (locations.value ?? []).flatMap((location) =>
-    (location.workspaces ?? []).map((workspace) => ({
-      ...workspace,
-      locationId: location.id,
-      locationName: location.location,
-    })),
+  (scopedLocations.value ?? []).flatMap((location) =>
+    (location.workspaces ?? []).map(
+      (
+        workspace,
+      ): EditableWorkspace & {
+        locationId: number;
+        locationName: string;
+      } => ({
+        id: workspace.id,
+        name: workspace.name,
+        type: workspace.type,
+        capacity: workspace.capacity,
+        base_price: workspace.base_price,
+        booking_price: workspace.booking_price,
+        status: workspace.status,
+        locationId: location.id,
+        locationName: location.location,
+      }),
+    ),
   ),
 );
 
 const workspaceTypes = computed(() =>
   [...new Set(workspaceRows.value.map((workspace) => workspace.type))].sort(),
 );
+
+const addWorkspaceLocationId = computed(() => {
+  if (selectedLocation.value) return Number(selectedLocation.value);
+  return scopedLocations.value?.length === 1
+    ? (scopedLocations.value[0]?.id ?? null)
+    : null;
+});
+
+function editWorkspace(workspace: EditableWorkspace) {
+  selectedWorkspace.value = workspace;
+  isEditWorkspaceModalOpen.value = true;
+}
+
+function handleWorkspaceSaved() {
+  isEditWorkspaceModalOpen.value = false;
+  selectedWorkspace.value = null;
+  refresh();
+}
+
+route.meta.headerActions = [
+  {
+    label: "Add workspace",
+    onClick: () => {
+      isAddWorkspaceModalOpen.value = true;
+    },
+    variant: "primary",
+  },
+];
 
 const filteredWorkspaces = computed(() => {
   const search = searchQuery.value.trim().toLowerCase();
@@ -157,6 +217,28 @@ async function handleStatusUpdate() {
     await refresh();
   }
 }
+const workspaceTypesByLocation = computed(() => {
+  const map: Record<number, string[]> = {};
+  for (const location of scopedLocations.value ?? []) {
+    const types = [
+      ...new Set((location.workspaces ?? []).map((w) => w.type)),
+    ].sort();
+    if (types.length) map[location.id] = types;
+  }
+  return map;
+});
+watch(
+  scopedLocations,
+  (value) => {
+    const first = value?.[0];
+    if (value?.length === 1 && first) {
+      selectedLocation.value = String(first.id);
+    } else {
+      selectedLocation.value = "";
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -189,9 +271,11 @@ async function handleStatusUpdate() {
                 v-model="selectedLocation"
                 class="w-full rounded-xl border border-border bg-bg px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
-                <option value="">All locations</option>
+                <option v-if="(scopedLocations?.length ?? 0) > 1" value="">
+                  All locations
+                </option>
                 <option
-                  v-for="location in locations"
+                  v-for="location in scopedLocations"
                   :key="location.id"
                   :value="String(location.id)"
                 >
@@ -244,22 +328,12 @@ async function handleStatusUpdate() {
         </div>
       </div>
 
-      <div v-if="locationPending || availabilityPending" class="space-y-3 p-5">
-        <div
-          v-for="index in 5"
-          :key="index"
-          class="h-12 animate-pulse rounded-xl bg-muted/10"
-        />
-      </div>
-      <p v-else-if="locationsError" class="p-5 text-sm text-red-700">
+      <p v-if="scopedLocationsError" class="p-5 text-sm text-red-700">
         Unable to load workspaces. Please try again.
       </p>
 
-      <div
-        v-else-if="filteredWorkspaces.length"
-        class="sticky top-0 max-h-[80vh] overflow-auto pb-4"
-      >
-        <table class="w-full min-w-[920px] text-left text-sm">
+      <div class="sticky top-0 max-h-[80vh] overflow-auto pb-4">
+        <table class="w-full min-w-230 text-left text-sm">
           <thead
             class="border-b border-border sticky top-0 z-10 bg-border text-xs uppercase tracking-wider text-muted"
           >
@@ -270,6 +344,8 @@ async function handleStatusUpdate() {
                 Workspace type
               </th>
               <th scope="col" class="px-5 py-3 font-semibold">Capacity</th>
+              <th scope="col" class="px-5 py-3 font-semibold">Base price</th>
+              <th scope="col" class="px-5 py-3 font-semibold">Booking price</th>
               <th scope="col" class="px-5 py-3 font-semibold">Status</th>
               <th scope="col" class="px-5 py-3 font-semibold">Availability</th>
               <th scope="col" class="px-5 py-3 font-semibold">
@@ -280,6 +356,18 @@ async function handleStatusUpdate() {
           </thead>
           <tbody class="divide-y divide-border">
             <tr
+              v-if="scopedLocationsPending"
+              v-for="index in 5"
+              :key="index"
+              class=""
+            >
+              <td v-for="index in 10" :key="index" class="h-15 px-2">
+                <div class="h-[50%] bg-muted/20 animate-pulse rounded-sm"></div>
+              </td>
+            </tr>
+
+            <tr
+              v-else-if="filteredWorkspaces.length"
               v-for="workspace in filteredWorkspaces"
               :key="workspace.id"
               class="hover:bg-card-bg2/60 odd:bg-card-bg even:bg-card-bg2/40"
@@ -292,6 +380,12 @@ async function handleStatusUpdate() {
                 {{ formatWorkspaceType(workspace.type) }}
               </td>
               <td class="px-5 py-4 text-body">{{ workspace.capacity || 1 }}</td>
+              <td class="px-5 py-4 text-body">
+                {{ currencyFormatter.format(workspace.base_price ?? 0) }}
+              </td>
+              <td class="px-5 py-4 text-body">
+                {{ currencyFormatter.format(workspace.booking_price ?? 0) }}
+              </td>
               <td class="px-4 py-3">
                 <span
                   class="rounded-full px-2 py-1 text-xs font-semibold"
@@ -324,29 +418,61 @@ async function handleStatusUpdate() {
                 {{ formatNextAvailableTime(workspace.id) }}
               </td>
               <td class="px-4 py-3 text-right">
-                <button
-                  @click="toggleStatusUpdate(workspace)"
-                  type="button"
-                  class="border rounded-lg p-2"
-                  :class="
-                    workspace.status === 'inactive'
-                      ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-300'
-                      : 'border-error text-error-text bg-red-200 hover:bg-red-300'
-                  "
-                >
-                  {{
-                    workspace.status === "inactive" ? "Activate" : "Deactivate"
-                  }}
-                </button>
+                <div class="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    class="secondary rounded-lg px-3 py-2"
+                    @click="editWorkspace(workspace)"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    @click="toggleStatusUpdate(workspace)"
+                    type="button"
+                    class="border rounded-lg p-2"
+                    :class="
+                      workspace.status === 'inactive'
+                        ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-300'
+                        : 'border-error text-error-text bg-red-200 hover:bg-red-300'
+                    "
+                  >
+                    {{
+                      workspace.status === "inactive"
+                        ? "Activate"
+                        : "Deactivate"
+                    }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr v-else class="">
+              <td class="h-15 px-2">
+                <div class="p-10 text-center text-sm text-muted">
+                  No workspace units match the current filters.
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div v-else class="p-10 text-center text-sm text-muted">
-        No workspace units match the current filters.
-      </div>
     </article>
+
+    <AddWorkspaceModal
+      v-model="isAddWorkspaceModalOpen"
+      :location-id="addWorkspaceLocationId"
+      :locations="scopedLocations ?? []"
+      :workspace-types-by-location="workspaceTypesByLocation"
+      :all-workspace-types="workspaceTypes"
+      :selected-workspace-type="selectedWorkspaceType || null"
+      @added="refresh"
+    />
+
+    <EditWorkspaceModal
+      v-model="isEditWorkspaceModalOpen"
+      :workspace="selectedWorkspace"
+      :workspace-types="workspaceTypes"
+      @saved="handleWorkspaceSaved"
+    />
 
     <ConfirmModal
       v-model="isConfirmModalOpen"

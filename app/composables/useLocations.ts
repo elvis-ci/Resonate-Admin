@@ -29,6 +29,8 @@ export function useLocationsInfo() {
         type,
         name,
         capacity,
+        base_price,
+        booking_price,
         location_id,
         status
       )
@@ -50,5 +52,55 @@ export function useLocationsInfo() {
     })),
   );
 
-  return { locations, locationPending, locationSummary, locationsError, refresh };
+  return {
+    locations,
+    locationPending,
+    locationSummary,
+    locationsError,
+    refresh,
+  };
+}
+
+export function useScopedLocation() {
+  const user = useSupabaseUser();
+  const supabase = useSupabaseClient<Database>();
+
+  const {
+    data: scopedLocations,
+    pending: scopedLocationsPending,
+    error: scopedLocationsError,
+    refresh,
+  } = useLazyAsyncData(
+    "scoped-location",
+    async () => {
+      const { data, error } = await supabase.from("locations").select(`
+          id,
+          slug,
+          location,
+          city,
+          workspaces (
+        id,
+        type,
+        name,
+        capacity,
+        base_price,
+        booking_price,
+        location_id,
+        status
+      )
+        `);
+
+      if (error) throw error;
+
+      return data;
+    },
+    { watch: [user], immediate: true },
+  );
+
+  return {
+    scopedLocations,
+    scopedLocationsPending,
+    scopedLocationsError,
+    refresh,
+  };
 }
