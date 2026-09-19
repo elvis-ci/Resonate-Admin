@@ -21,6 +21,8 @@ const selectedLocation = ref("");
 const selectedWorkspaceType = ref("");
 const selectedStatus = ref("");
 const selectedAvailability = ref("");
+const route = useRoute();
+const isAddWorkspaceModalOpen = ref(false);
 const availabilityCheckedAt = new Date();
 const { data: workspaceBookings, pending: availabilityPending } =
   useLazyAsyncData("workspace-availability", async () => {
@@ -111,6 +113,23 @@ const workspaceTypes = computed(() =>
   [...new Set(workspaceRows.value.map((workspace) => workspace.type))].sort(),
 );
 
+const addWorkspaceLocationId = computed(() => {
+  if (selectedLocation.value) return Number(selectedLocation.value);
+  return scopedLocations.value?.length === 1
+    ? (scopedLocations.value[0]?.id ?? null)
+    : null;
+});
+
+route.meta.headerActions = [
+  {
+    label: "Add workspace",
+    onClick: () => {
+      isAddWorkspaceModalOpen.value = true;
+    },
+    variant: "primary",
+  },
+];
+
 const filteredWorkspaces = computed(() => {
   const search = searchQuery.value.trim().toLowerCase();
 
@@ -161,7 +180,16 @@ async function handleStatusUpdate() {
     await refresh();
   }
 }
-
+const workspaceTypesByLocation = computed(() => {
+  const map: Record<number, string[]> = {};
+  for (const location of scopedLocations.value ?? []) {
+    const types = [
+      ...new Set((location.workspaces ?? []).map((w) => w.type)),
+    ].sort();
+    if (types.length) map[location.id] = types;
+  }
+  return map;
+});
 watch(
   scopedLocations,
   (value) => {
@@ -373,6 +401,16 @@ watch(
       </div>
     </article>
 
+    <AddWorkspaceModal
+      v-model="isAddWorkspaceModalOpen"
+      :location-id="addWorkspaceLocationId"
+      :locations="scopedLocations ?? []"
+      :workspace-types-by-location="workspaceTypesByLocation"
+      :all-workspace-types="workspaceTypes"
+      :selected-workspace-type="selectedWorkspaceType || null"
+      @added="refresh"
+    />
+    
     <ConfirmModal
       v-model="isConfirmModalOpen"
       :title="confirmModalTitle"

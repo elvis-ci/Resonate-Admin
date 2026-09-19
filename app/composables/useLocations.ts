@@ -29,6 +29,8 @@ export function useLocationsInfo() {
         type,
         name,
         capacity,
+        base_price,
+        booking_price,
         location_id,
         status
       )
@@ -50,7 +52,13 @@ export function useLocationsInfo() {
     })),
   );
 
-  return { locations, locationPending, locationSummary, locationsError, refresh };
+  return {
+    locations,
+    locationPending,
+    locationSummary,
+    locationsError,
+    refresh,
+  };
 }
 
 export function useScopedLocation() {
@@ -75,6 +83,8 @@ export function useScopedLocation() {
         type,
         name,
         capacity,
+        base_price,
+        booking_price,
         location_id,
         status
       )
