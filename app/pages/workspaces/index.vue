@@ -1,17 +1,6 @@
 <script setup lang="ts">
-import type { Database } from "~/types/database";
 import { currencyFormatter, formatWorkspaceType } from "~/utils/formatters";
-
-type EditableWorkspace = Pick<
-  Database["public"]["Tables"]["workspaces"]["Row"],
-  | "id"
-  | "name"
-  | "type"
-  | "capacity"
-  | "base_price"
-  | "booking_price"
-  | "status"
->;
+import type { WorkspaceRow } from "~/composables/useWorkspaces";
 
 definePageMeta({
   title: "Workspaces",
@@ -26,118 +15,22 @@ const {
   scopedLocationsError,
   refresh,
 } = useScopedLocation();
-const supabase = useSupabaseClient<Database>();
-const searchQuery = ref("");
-const selectedLocation = ref("");
-const selectedWorkspaceType = ref("");
-const selectedStatus = ref("");
-const selectedAvailability = ref("");
 const route = useRoute();
 const isAddWorkspaceModalOpen = ref(false);
 const isEditWorkspaceModalOpen = ref(false);
-const selectedWorkspace = ref<EditableWorkspace | null>(null);
-const availabilityCheckedAt = new Date();
-const { data: workspaceBookings, pending: availabilityPending } =
-  useLazyAsyncData("workspace-availability", async () => {
-    const { data, error } = await supabase
-      .from("workspace_bookings")
-      .select("workspace_id, start_at, end_at")
-      .eq("status", "confirmed")
-      .gte("end_at", availabilityCheckedAt.toISOString())
-      .order("start_at");
-
-    if (error) throw error;
-    return data ?? [];
-  });
-
-const bookedWorkspaceIdSet = computed(() => {
-  const now = availabilityCheckedAt.getTime();
-  return new Set(
-    (workspaceBookings.value ?? [])
-      .filter((booking) => {
-        const start = booking.start_at
-          ? new Date(booking.start_at).getTime()
-          : Number.POSITIVE_INFINITY;
-        const end = booking.end_at
-          ? new Date(booking.end_at).getTime()
-          : Number.NEGATIVE_INFINITY;
-        return start <= now && end > now;
-      })
-      .map((booking) => booking.workspace_id),
-  );
-});
-
-const nextAvailableTimeByWorkspace = computed(() => {
-  const now = availabilityCheckedAt.getTime();
-  const nextAvailableTimes = new Map<string, number>();
-  const bookingsByWorkspace = new Map<
-    string,
-    { start: number; end: number }[]
-  >();
-
-  for (const booking of workspaceBookings.value ?? []) {
-    if (!booking.start_at || !booking.end_at) continue;
-    const start = new Date(booking.start_at).getTime();
-    const end = new Date(booking.end_at).getTime();
-    if (Number.isNaN(start) || Number.isNaN(end)) continue;
-    const bookings = bookingsByWorkspace.get(booking.workspace_id) ?? [];
-    bookings.push({ start, end });
-    bookingsByWorkspace.set(booking.workspace_id, bookings);
-  }
-
-  for (const [workspaceId, bookings] of bookingsByWorkspace) {
-    let nextAvailableAt = now;
-    for (const booking of bookings) {
-      if (booking.end <= nextAvailableAt) continue;
-      if (booking.start > nextAvailableAt) break;
-      nextAvailableAt = booking.end;
-    }
-    nextAvailableTimes.set(workspaceId, nextAvailableAt);
-  }
-
-  return nextAvailableTimes;
-});
-
-const nextAvailableTimeFormatter = new Intl.DateTimeFormat("en-NG", {
-  month: "short",
-  day: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-});
-
-function formatNextAvailableTime(workspaceId: string) {
-  const nextAvailableAt = nextAvailableTimeByWorkspace.value.get(workspaceId);
-  if (!nextAvailableAt || nextAvailableAt <= availabilityCheckedAt.getTime())
-    return "Available now";
-  return nextAvailableTimeFormatter.format(new Date(nextAvailableAt));
-}
-
-const workspaceRows = computed(() =>
-  (scopedLocations.value ?? []).flatMap((location) =>
-    (location.workspaces ?? []).map(
-      (
-        workspace,
-      ): EditableWorkspace & {
-        locationId: number;
-        locationName: string;
-      } => ({
-        id: workspace.id,
-        name: workspace.name,
-        type: workspace.type,
-        capacity: workspace.capacity,
-        base_price: workspace.base_price,
-        booking_price: workspace.booking_price,
-        status: workspace.status,
-        locationId: location.id,
-        locationName: location.location,
-      }),
-    ),
-  ),
-);
-
-const workspaceTypes = computed(() =>
-  [...new Set(workspaceRows.value.map((workspace) => workspace.type))].sort(),
-);
+const selectedWorkspace = ref<WorkspaceRow | null>(null);
+const {
+  searchQuery,
+  selectedLocation,
+  selectedWorkspaceType,
+  selectedStatus,
+  selectedAvailability,
+  workspaceTypes,
+  workspaceTypesByLocation,
+  bookedWorkspaceIdSet,
+  filteredWorkspaces,
+  formatNextAvailableTime,
+} = useWorkspaces(scopedLocations);
 
 const addWorkspaceLocationId = computed(() => {
   if (selectedLocation.value) return Number(selectedLocation.value);
@@ -146,7 +39,7 @@ const addWorkspaceLocationId = computed(() => {
     : null;
 });
 
-function editWorkspace(workspace: EditableWorkspace) {
+function editWorkspace(workspace: WorkspaceRow) {
   selectedWorkspace.value = workspace;
   isEditWorkspaceModalOpen.value = true;
 }
@@ -167,38 +60,6 @@ route.meta.headerActions = [
   },
 ];
 
-const filteredWorkspaces = computed(() => {
-  const search = searchQuery.value.trim().toLowerCase();
-
-  return workspaceRows.value.filter((workspace) => {
-    const status = workspace.status ?? "active";
-    const matchesSearch =
-      !search || (workspace.name ?? "").toLowerCase().includes(search);
-    const matchesLocation =
-      !selectedLocation.value ||
-      String(workspace.locationId) === selectedLocation.value;
-    const matchesType =
-      !selectedWorkspaceType.value ||
-      workspace.type === selectedWorkspaceType.value;
-    const matchesStatus =
-      !selectedStatus.value || status === selectedStatus.value;
-    const availability = bookedWorkspaceIdSet.value.has(workspace.id)
-      ? "booked"
-      : "available";
-    const matchesAvailability =
-      !selectedAvailability.value ||
-      availability === selectedAvailability.value;
-
-    return (
-      matchesSearch &&
-      matchesLocation &&
-      matchesType &&
-      matchesStatus &&
-      matchesAvailability
-    );
-  });
-});
-
 const {
   isConfirmModalOpen,
   isTogglingWorkspace,
@@ -217,16 +78,6 @@ async function handleStatusUpdate() {
     await refresh();
   }
 }
-const workspaceTypesByLocation = computed(() => {
-  const map: Record<number, string[]> = {};
-  for (const location of scopedLocations.value ?? []) {
-    const types = [
-      ...new Set((location.workspaces ?? []).map((w) => w.type)),
-    ].sort();
-    if (types.length) map[location.id] = types;
-  }
-  return map;
-});
 watch(
   scopedLocations,
   (value) => {
