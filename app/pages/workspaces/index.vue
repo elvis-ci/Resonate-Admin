@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import type { Database } from "~/types/database";
-import { formatWorkspaceType } from "~/utils/formatters";
+import { currencyFormatter, formatWorkspaceType } from "~/utils/formatters";
+
+type EditableWorkspace = Pick<
+  Database["public"]["Tables"]["workspaces"]["Row"],
+  | "id"
+  | "name"
+  | "type"
+  | "capacity"
+  | "base_price"
+  | "booking_price"
+  | "status"
+>;
 
 definePageMeta({
   title: "Workspaces",
@@ -23,6 +34,8 @@ const selectedStatus = ref("");
 const selectedAvailability = ref("");
 const route = useRoute();
 const isAddWorkspaceModalOpen = ref(false);
+const isEditWorkspaceModalOpen = ref(false);
+const selectedWorkspace = ref<EditableWorkspace | null>(null);
 const availabilityCheckedAt = new Date();
 const { data: workspaceBookings, pending: availabilityPending } =
   useLazyAsyncData("workspace-availability", async () => {
@@ -101,11 +114,24 @@ function formatNextAvailableTime(workspaceId: string) {
 
 const workspaceRows = computed(() =>
   (scopedLocations.value ?? []).flatMap((location) =>
-    (location.workspaces ?? []).map((workspace) => ({
-      ...workspace,
-      locationId: location.id,
-      locationName: location.location,
-    })),
+    (location.workspaces ?? []).map(
+      (
+        workspace,
+      ): EditableWorkspace & {
+        locationId: number;
+        locationName: string;
+      } => ({
+        id: workspace.id,
+        name: workspace.name,
+        type: workspace.type,
+        capacity: workspace.capacity,
+        base_price: workspace.base_price,
+        booking_price: workspace.booking_price,
+        status: workspace.status,
+        locationId: location.id,
+        locationName: location.location,
+      }),
+    ),
   ),
 );
 
@@ -119,6 +145,17 @@ const addWorkspaceLocationId = computed(() => {
     ? (scopedLocations.value[0]?.id ?? null)
     : null;
 });
+
+function editWorkspace(workspace: EditableWorkspace) {
+  selectedWorkspace.value = workspace;
+  isEditWorkspaceModalOpen.value = true;
+}
+
+function handleWorkspaceSaved() {
+  isEditWorkspaceModalOpen.value = false;
+  selectedWorkspace.value = null;
+  refresh();
+}
 
 route.meta.headerActions = [
   {
@@ -296,7 +333,7 @@ watch(
       </p>
 
       <div class="sticky top-0 max-h-[80vh] overflow-auto pb-4">
-        <table class="w-full min-w-[920px] text-left text-sm">
+        <table class="w-full min-w-230 text-left text-sm">
           <thead
             class="border-b border-border sticky top-0 z-10 bg-border text-xs uppercase tracking-wider text-muted"
           >
@@ -307,6 +344,8 @@ watch(
                 Workspace type
               </th>
               <th scope="col" class="px-5 py-3 font-semibold">Capacity</th>
+              <th scope="col" class="px-5 py-3 font-semibold">Base price</th>
+              <th scope="col" class="px-5 py-3 font-semibold">Booking price</th>
               <th scope="col" class="px-5 py-3 font-semibold">Status</th>
               <th scope="col" class="px-5 py-3 font-semibold">Availability</th>
               <th scope="col" class="px-5 py-3 font-semibold">
@@ -322,7 +361,7 @@ watch(
               :key="index"
               class=""
             >
-              <td v-for="index in 8" :key="index" class="h-15 px-2">
+              <td v-for="index in 10" :key="index" class="h-15 px-2">
                 <div class="h-[50%] bg-muted/20 animate-pulse rounded-sm"></div>
               </td>
             </tr>
@@ -341,6 +380,12 @@ watch(
                 {{ formatWorkspaceType(workspace.type) }}
               </td>
               <td class="px-5 py-4 text-body">{{ workspace.capacity || 1 }}</td>
+              <td class="px-5 py-4 text-body">
+                {{ currencyFormatter.format(workspace.base_price ?? 0) }}
+              </td>
+              <td class="px-5 py-4 text-body">
+                {{ currencyFormatter.format(workspace.booking_price ?? 0) }}
+              </td>
               <td class="px-4 py-3">
                 <span
                   class="rounded-full px-2 py-1 text-xs font-semibold"
@@ -373,20 +418,31 @@ watch(
                 {{ formatNextAvailableTime(workspace.id) }}
               </td>
               <td class="px-4 py-3 text-right">
-                <button
-                  @click="toggleStatusUpdate(workspace)"
-                  type="button"
-                  class="border rounded-lg p-2"
-                  :class="
-                    workspace.status === 'inactive'
-                      ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-300'
-                      : 'border-error text-error-text bg-red-200 hover:bg-red-300'
-                  "
-                >
-                  {{
-                    workspace.status === "inactive" ? "Activate" : "Deactivate"
-                  }}
-                </button>
+                <div class="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    class="secondary rounded-lg px-3 py-2"
+                    @click="editWorkspace(workspace)"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    @click="toggleStatusUpdate(workspace)"
+                    type="button"
+                    class="border rounded-lg p-2"
+                    :class="
+                      workspace.status === 'inactive'
+                        ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-300'
+                        : 'border-error text-error-text bg-red-200 hover:bg-red-300'
+                    "
+                  >
+                    {{
+                      workspace.status === "inactive"
+                        ? "Activate"
+                        : "Deactivate"
+                    }}
+                  </button>
+                </div>
               </td>
             </tr>
             <tr v-else class="">
@@ -410,7 +466,14 @@ watch(
       :selected-workspace-type="selectedWorkspaceType || null"
       @added="refresh"
     />
-    
+
+    <EditWorkspaceModal
+      v-model="isEditWorkspaceModalOpen"
+      :workspace="selectedWorkspace"
+      :workspace-types="workspaceTypes"
+      @saved="handleWorkspaceSaved"
+    />
+
     <ConfirmModal
       v-model="isConfirmModalOpen"
       :title="confirmModalTitle"
