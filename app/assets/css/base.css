@@ -256,6 +256,9 @@ h2.white {
 h3 {
   @apply text-sm sm:text-base md:text-lg font-semibold text-heading;
 }
+h3.primary {
+  @apply text-sm sm:text-base md:text-lg font-semibold text-primary-text;
+}
 h3.white {
   @apply text-sm sm:text-base md:text-lg font-semibold text-white/80;
 }
