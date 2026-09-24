@@ -13,7 +13,9 @@ const adminName = computed(() => profile.value?.full_name || "Administrator");
 const adminRole = computed(() => {
   const role = profile.value?.role;
   return role
-    ? role.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
+    ? role
+        .replaceAll("_", " ")
+        .replace(/\b\w/g, (letter) => letter.toUpperCase())
     : "Admin";
 });
 
@@ -219,12 +221,12 @@ function onSignOutKeydown(event: KeyboardEvent) {
             </NuxtLink>
           </li>
 
-          <li>
+          <!-- <li>
             <NuxtLink
-              to="/resources"
+              to="/maintenance"
               :class="[
                 'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
-                isActive('/resources')
+                isActive('/maintenance')
                   ? 'text-primary-hover font-bold bg-primary/5'
                   : 'hover:bg-primary/5',
               ]"
@@ -243,7 +245,7 @@ function onSignOutKeydown(event: KeyboardEvent) {
                   <circle cx="12" cy="12" r="7" />
                 </svg>
               </span>
-              <span>Resources</span>
+              <span>Maintenance</span>
             </NuxtLink>
           </li>
 
@@ -273,7 +275,7 @@ function onSignOutKeydown(event: KeyboardEvent) {
               </span>
               <span>Billing</span>
             </NuxtLink>
-          </li>
+          </li> -->
 
           <li>
             <NuxtLink
@@ -339,22 +341,49 @@ function onSignOutKeydown(event: KeyboardEvent) {
 
     <div class="space-y-4">
       <div
-        class="flex items-center gap-3 rounded-xl border border-border bg-bg px-3 py-2.5"
+        class="flex flex-col gap-3 rounded-xl border border-border bg-bg px-3 py-2.5"
         aria-label="Admin profile"
       >
-        <span
-          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary"
-          aria-hidden="true"
-        >
-          {{ adminName.charAt(0).toUpperCase() }}
-        </span>
-        <div class="min-w-0">
-          <p class="text-xs font-medium text-muted">Admin profile</p>
-          <p class="truncate text-sm font-semibold text-heading">
-            {{ isProfilePending ? "Loading..." : adminName }}
-          </p>
-          <p class="truncate text-xs text-muted">{{ adminRole }}</p>
+        <div class="w-full flex flex-1 items-center justify-evenly gap-3">
+          <span
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary"
+            aria-hidden="true"
+          >
+            {{ adminName.charAt(0).toUpperCase() }}
+          </span>
+          <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">Admin profile</p>
+            <p class="truncate text-sm font-semibold text-heading">
+              {{ isProfilePending ? "Loading..." : adminName }}
+            </p>
+            <p class="truncate text-xs text-muted">{{ adminRole }}</p>
+          </div>
         </div>
+        <button
+          type="button"
+          class="secondary flex items-center px-2 py-2 cursor-pointer rounded-lg text-body font-bold gap-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"
+          :disabled="isSigningOut"
+          @click="signOut"
+          @keydown="onSignOutKeydown"
+        >
+          <span class="">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <path d="M16 17l5-5-5-5" />
+              <path d="M21 12H9" />
+            </svg>
+          </span>
+
+          {{ isSigningOut ? "Signing out..." : "Sign out" }}
+        </button>
       </div>
 
       <p
@@ -402,38 +431,11 @@ function onSignOutKeydown(event: KeyboardEvent) {
           ></span>
         </span>
       </button>
-
-      <button
-        type="button"
-        class="flex px-3 py-2 cursor-pointer rounded-lg text-body font-bold gap-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"
-        :disabled="isSigningOut"
-        @click="signOut"
-        @keydown="onSignOutKeydown"
-      >
-        <span class="theme-icon">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <path d="M16 17l5-5-5-5" />
-            <path d="M21 12H9" />
-          </svg>
-        </span>
-
-        {{ isSigningOut ? "Signing out..." : "Sign out" }}
-      </button>
     </div>
   </aside>
 </template>
 
 <style scoped>
-
 svg {
   width: 1.25rem;
   height: 1.25rem;
@@ -472,7 +474,7 @@ svg {
   justify-content: center;
   width: 1.25rem;
   height: 1.25rem;
-  color: var(--color-primary);
+  color: white;
 }
 
 .theme-icon svg {
