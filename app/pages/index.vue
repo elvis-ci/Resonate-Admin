@@ -73,7 +73,7 @@ const priorPeriod = computed(() => priorPeriodLabels[selected.value] ?? "");
       <select
         v-else-if="isSuperAdmin"
         v-model="selectedLocationId"
-        class="px-3 py-1 rounded-full text-sm font-semibold bg-primary/10 text-primary-text border-none focus:outline-none focus:ring-2 focus:ring-primary/30"
+        class="px-3 py-2 rounded-lg text-sm font-semibold bg-alt-bg2 text-body border border-border focus:outline-priimary focus:ring-2 focus:ring-primary/30"
       >
         <option :value="null">All locations</option>
         <option v-for="loc in locations" :key="loc.id" :value="loc.id">
