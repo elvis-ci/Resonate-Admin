@@ -1,7 +1,7 @@
 <script setup lang="ts">
 definePageMeta({
-  title: "Resources",
-  heading: "Workspace resources",
+  title: "Maintenance",
+  heading: "Workspace Maintenance",
   subtext: "Monitor rooms, desks, equipment, and service requests in one view.",
 });
 </script>
