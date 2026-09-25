@@ -27,6 +27,7 @@ export function useAdminProfile() {
     );
 
   const isSuperAdmin = computed(() => profile.value?.role === "super_admin");
+  const adminLocationId = computed(() => Number(profile.value?.location_id));
 
   const { data: adminLocationName } = useLazyAsyncData<string | null>(
     "current-admin-location-name",
@@ -48,5 +49,5 @@ export function useAdminProfile() {
     return null;
   });
 
-  return { profile, isProfilePending, isSuperAdmin, adminLocationName, scopeLabel };
+  return { profile, isProfilePending, adminLocationId, isSuperAdmin, adminLocationName, scopeLabel };
 }
