@@ -351,12 +351,12 @@ const priorPeriod = computed(() => priorPeriodLabels[selected.value] ?? "");
         >
           By location
         </p>
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="text-left text-muted border-b border-border">
-              <th class="pb-2 font-semibold">Location</th>
-              <th class="pb-2 font-semibold text-right">Revenue</th>
-              <th class="pb-2 font-semibold text-right">Bookings</th>
+        <table class="w-full min-w-105 text-sm">
+          <thead class="bg-border text-xs uppercase tracking-wider text-muted">
+            <tr class="border-b border-border text-left">
+              <th class="px-3 py-3 font-semibold">Location</th>
+              <th class="px-3 py-3 text-right font-semibold">Revenue</th>
+              <th class="px-3 py-3 text-right font-semibold">Bookings</th>
             </tr>
           </thead>
           <tbody>
@@ -375,13 +375,13 @@ const priorPeriod = computed(() => priorPeriodLabels[selected.value] ?? "");
               v-else
               v-for="row in locationBreakdown"
               :key="row.location_id"
-              class="border-b border-border last:border-0"
+              class="border-b border-border hover:bg-card-bg2/60 odd:bg-card-bg even:bg-card-bg2/40 last:border-0"
             >
-              <td class="py-2 text-heading">{{ row.location_name }}</td>
-              <td class="py-2 text-right text-heading">
+              <td class="px-3 py-2 text-heading">{{ row.location_name }}</td>
+              <td class="px-3 py-2 text-right text-heading">
                 {{ currencyFormatter.format(row.revenue) }}
               </td>
-              <td class="py-2 text-right text-heading">
+              <td class="px-3 py-2 text-right text-heading">
                 {{ row.booking_count }}
               </td>
             </tr>
@@ -398,12 +398,12 @@ const priorPeriod = computed(() => priorPeriodLabels[selected.value] ?? "");
         >
           By workspace
         </p>
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="text-left text-muted border-b border-border">
-              <th class="pb-2 font-semibold">Workspace</th>
-              <th class="pb-2 font-semibold text-right">Revenue</th>
-              <th class="pb-2 font-semibold text-right">Bookings</th>
+        <table class="w-full min-w-120 text-sm">
+          <thead class="bg-border text-xs uppercase tracking-wider text-muted">
+            <tr class="border-b border-border text-left">
+              <th class="px-3 py-3 font-semibold">Workspace</th>
+              <th class="px-3 py-3 text-right font-semibold">Revenue</th>
+              <th class="px-3 py-3 text-right font-semibold">Bookings</th>
             </tr>
           </thead>
           <tbody>
@@ -422,18 +422,18 @@ const priorPeriod = computed(() => priorPeriodLabels[selected.value] ?? "");
               v-else
               v-for="row in workspaceBreakdown"
               :key="row.workspace_id"
-              class="border-b border-border last:border-0"
+              class="border-b border-border hover:bg-card-bg2/60 odd:bg-card-bg even:bg-card-bg2/40 last:border-0"
             >
-              <td class="py-2 text-heading">
+              <td class="px-3 py-2 text-heading">
                 {{ row.workspace_name }}
                 <span class="text-muted font-normal">
                   · {{ row.location_name }}
                 </span>
               </td>
-              <td class="py-2 text-right text-heading">
+              <td class="px-3 py-2 text-right text-heading">
                 {{ currencyFormatter.format(row.revenue) }}
               </td>
-              <td class="py-2 text-right text-heading">
+              <td class="px-3 py-2 text-right text-heading">
                 {{ row.booking_count }}
               </td>
             </tr>

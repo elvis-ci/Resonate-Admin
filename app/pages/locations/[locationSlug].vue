@@ -155,7 +155,7 @@ async function handleStatusUpdate() {
         <div
           class="max-h-[calc(100vh-200px)] overflow-auto rounded-xl border border-border"
         >
-          <table class="w-full min-w-[620px] text-left text-sm">
+          <table class="w-full min-w-155 text-left text-sm">
             <thead class="sticky top-0 bg-border">
               <tr>
                 <th
@@ -213,6 +213,7 @@ async function handleStatusUpdate() {
                 v-else-if="selectedWorkspaces.length"
                 v-for="workspace in selectedWorkspaces"
                 :key="workspace.id"
+                class="hover:bg-card-bg2/60 odd:bg-card-bg even:bg-card-bg2/40"
               >
                 <td class="px-4 py-3 font-semibold text-heading">
                   {{ workspace.id }}

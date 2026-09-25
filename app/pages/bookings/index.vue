@@ -141,10 +141,10 @@ const currencyFormatter = new Intl.NumberFormat("en-NG", {
         Unable to load bookings: {{ error.message }}
       </p>
 
-      <div class="sticky top-0 max-h-[80vh] overflow-auto pb-4">
-        <table class="w-full min-w-[1000px] text-left text-sm">
+      <div class="max-h-[80vh] overflow-auto pb-4">
+        <table class="w-full min-w-250 text-left text-sm">
           <thead
-            class="border-b border-border sticky top-0 z-10 bg-border text-xs uppercase tracking-wider text-muted"
+            class="sticky top-0 z-10 border-b border-border bg-border text-xs uppercase tracking-wider text-muted"
           >
             <tr>
               <th scope="col" class="px-5 py-3 font-semibold">Guest</th>

@@ -652,19 +652,20 @@ const typeChartSeries = computed(() =>
     <!-- Top workspaces -->
     <article class="rounded-2xl bg-alt-bg2 p-5 shadow-elev">
       <h3 class="mb-4 font-semibold primary">Top workspaces</h3>
-      <table class="w-full text-left text-sm">
-        <thead
-          class="border-b border-border text-xs uppercase tracking-wider text-muted"
-        >
-          <tr>
-            <th class="px-3 py-2 font-semibold">Workspace</th>
-            <th class="px-3 py-2 font-semibold">Location</th>
-            <th class="px-3 py-2 font-semibold">Type</th>
-            <th class="px-3 py-2 font-semibold">Bookings</th>
-            <th class="px-3 py-2 font-semibold">Revenue</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-border">
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-180 text-left text-sm">
+          <thead
+            class="sticky top-0 z-10 border-b border-border bg-border text-xs uppercase tracking-wider text-muted"
+          >
+            <tr>
+              <th class="px-3 py-2 font-semibold">Workspace</th>
+              <th class="px-3 py-2 font-semibold">Location</th>
+              <th class="px-3 py-2 font-semibold">Type</th>
+              <th class="px-3 py-2 font-semibold">Bookings</th>
+              <th class="px-3 py-2 font-semibold">Revenue</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border">
           <tr v-if="pending" v-for="i in 5" :key="i">
             <td v-for="c in 5" :key="c" class="px-3 py-3">
               <div class="h-4 animate-pulse rounded bg-muted/20"></div>
@@ -674,6 +675,7 @@ const typeChartSeries = computed(() =>
             v-else-if="analytics?.workspaceBreakdown.length"
             v-for="ws in analytics.workspaceBreakdown"
             :key="ws.workspace_id"
+            class="hover:bg-card-bg2/60 odd:bg-card-bg even:bg-card-bg2/40"
           >
             <td class="px-3 py-3 font-medium text-body">
               {{ ws.workspace_name }}
@@ -690,8 +692,9 @@ const typeChartSeries = computed(() =>
               No data for this period.
             </td>
           </tr>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     </article>
   </section>
 </template>

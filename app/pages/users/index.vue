@@ -216,21 +216,22 @@ const roleBadgeClass: Record<string, string> = {
         {{ toggleError }}
       </p>
 
-      <article class="rounded-2xl bg-alt-bg2 p-5 shadow-elev overflow-hidden">
-        <table class="w-full min-w-[900px] text-left text-sm">
-          <thead
-            class="border-b border-border text-xs uppercase tracking-wider text-muted"
-          >
-            <tr>
-              <th class="px-3 py-3 font-semibold">Name</th>
-              <th class="px-3 py-3 font-semibold">Email</th>
-              <th class="px-3 py-3 font-semibold">Role</th>
-              <th class="px-3 py-3 font-semibold">Location</th>
-              <th class="px-3 py-3 font-semibold">Status</th>
-              <th class="px-3 py-3 font-semibold">Action</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-border">
+      <article class="rounded-2xl bg-alt-bg2 p-5 shadow-elev">
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-225 text-left text-sm">
+            <thead
+              class="sticky top-0 z-10 border-b border-border bg-border text-xs uppercase tracking-wider text-muted"
+            >
+              <tr>
+                <th class="px-3 py-3 font-semibold">Name</th>
+                <th class="px-3 py-3 font-semibold">Email</th>
+                <th class="px-3 py-3 font-semibold">Role</th>
+                <th class="px-3 py-3 font-semibold">Location</th>
+                <th class="px-3 py-3 font-semibold">Status</th>
+                <th class="px-3 py-3 font-semibold">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
             <tr v-if="pending" v-for="i in 6" :key="i">
               <td v-for="c in 6" :key="c" class="px-3 py-4">
                 <div class="h-4 animate-pulse rounded bg-muted/20"></div>
@@ -241,6 +242,7 @@ const roleBadgeClass: Record<string, string> = {
               v-else-if="paginatedAdmins.length"
               v-for="admin in paginatedAdmins"
               :key="admin.id"
+              class="hover:bg-card-bg2/60 odd:bg-card-bg even:bg-card-bg2/40"
             >
               <td class="px-3 py-4 font-medium text-heading">
                 {{ admin.full_name || "—" }}
@@ -313,8 +315,9 @@ const roleBadgeClass: Record<string, string> = {
                 No users match the current filters.
               </td>
             </tr>
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
 
         <div class="flex items-center justify-between pt-4 text-sm text-muted">
           <span>{{ filteredAdmins.length }} users</span>
