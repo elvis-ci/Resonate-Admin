@@ -666,32 +666,32 @@ const typeChartSeries = computed(() =>
             </tr>
           </thead>
           <tbody class="divide-y divide-border">
-          <tr v-if="pending" v-for="i in 5" :key="i">
-            <td v-for="c in 5" :key="c" class="px-3 py-3">
-              <div class="h-4 animate-pulse rounded bg-muted/20"></div>
-            </td>
-          </tr>
-          <tr
-            v-else-if="analytics?.workspaceBreakdown.length"
-            v-for="ws in analytics.workspaceBreakdown"
-            :key="ws.workspace_id"
-            class="hover:bg-card-bg2/60 odd:bg-card-bg even:bg-card-bg2/40"
-          >
-            <td class="px-3 py-3 font-medium text-body">
-              {{ ws.workspace_name }}
-            </td>
-            <td class="px-3 py-3 text-body">{{ ws.location_name }}</td>
-            <td class="px-3 py-3 text-body">{{ ws.workspace_type }}</td>
-            <td class="px-3 py-3 text-body">{{ ws.booking_count }}</td>
-            <td class="px-3 py-3 text-body">
-              {{ currencyFormatter.format(ws.revenue) }}
-            </td>
-          </tr>
-          <tr v-else>
-            <td colspan="5" class="p-10 text-center text-sm text-muted">
-              No data for this period.
-            </td>
-          </tr>
+            <tr v-if="pending" v-for="i in 5" :key="i">
+              <td v-for="c in 5" :key="c" class="px-3 py-3">
+                <div class="h-4 animate-pulse rounded bg-muted/20"></div>
+              </td>
+            </tr>
+            <tr
+              v-else-if="analytics?.workspaceBreakdown.length"
+              v-for="ws in analytics.workspaceBreakdown"
+              :key="ws.workspace_id"
+              class="hover:bg-card-bg2/60 odd:bg-card-bg even:bg-card-bg2/40"
+            >
+              <td class="px-3 py-3 font-medium text-body">
+                {{ ws.workspace_name }}
+              </td>
+              <td class="px-3 py-3 text-body">{{ ws.location_name }}</td>
+              <td class="px-3 py-3 text-body">{{ ws.workspace_type }}</td>
+              <td class="px-3 py-3 text-body">{{ ws.booking_count }}</td>
+              <td class="px-3 py-3 text-body">
+                {{ currencyFormatter.format(ws.revenue) }}
+              </td>
+            </tr>
+            <tr v-else>
+              <td colspan="5" class="p-10 text-center text-sm text-muted">
+                No data for this period.
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>

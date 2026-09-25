@@ -186,7 +186,7 @@ watch(
       <div class="max-h-[80vh] overflow-auto pb-4">
         <table class="w-full min-w-[1100px] text-left text-sm">
           <thead
-              class="sticky top-0 z-10 border-b border-border bg-border text-xs uppercase tracking-wider text-muted"
+            class="sticky top-0 z-10 border-b border-border bg-border text-xs uppercase tracking-wider text-muted"
           >
             <tr>
               <th scope="col" class="px-5 py-3 font-semibold">Unit</th>

@@ -232,89 +232,89 @@ const roleBadgeClass: Record<string, string> = {
               </tr>
             </thead>
             <tbody class="divide-y divide-border">
-            <tr v-if="pending" v-for="i in 6" :key="i">
-              <td v-for="c in 6" :key="c" class="px-3 py-4">
-                <div class="h-4 animate-pulse rounded bg-muted/20"></div>
-              </td>
-            </tr>
+              <tr v-if="pending" v-for="i in 6" :key="i">
+                <td v-for="c in 6" :key="c" class="px-3 py-4">
+                  <div class="h-4 animate-pulse rounded bg-muted/20"></div>
+                </td>
+              </tr>
 
-            <tr
-              v-else-if="paginatedAdmins.length"
-              v-for="admin in paginatedAdmins"
-              :key="admin.id"
-              class="hover:bg-card-bg2/60 odd:bg-card-bg even:bg-card-bg2/40"
-            >
-              <td class="px-3 py-4 font-medium text-heading">
-                {{ admin.full_name || "—" }}
-                <span
-                  v-if="admin.id === currentUser?.id"
-                  class="ml-1 text-xs text-muted"
-                  >(you)</span
-                >
-              </td>
-              <td class="px-3 py-4 text-body">{{ admin.email }}</td>
-              <td class="px-3 py-4">
-                <span
-                  class="rounded-full px-2 py-1 text-xs font-semibold capitalize"
-                  :class="roleBadgeClass[admin.role]"
-                >
-                  {{ admin.role.replace("_", " ") }}
-                </span>
-              </td>
-              <td class="px-3 py-4 text-body">
-                {{ admin.locations?.location ?? "—" }}
-              </td>
-              <td class="px-3 py-4">
-                <span
-                  class="rounded-full px-2 py-1 text-xs font-semibold"
-                  :class="
-                    admin.is_active
-                      ? 'bg-success/10 text-success'
-                      : 'bg-danger/10 text-danger'
-                  "
-                >
-                  {{ admin.is_active ? "Active" : "Inactive" }}
-                </span>
-              </td>
-              <td class="px-3 py-4">
-                <div v-if="can('manage_users')" class="flex gap-2">
-                  <button
-                    type="button"
-                    class="secondary"
-                    @click="openEdit(admin)"
+              <tr
+                v-else-if="paginatedAdmins.length"
+                v-for="admin in paginatedAdmins"
+                :key="admin.id"
+                class="hover:bg-card-bg2/60 odd:bg-card-bg even:bg-card-bg2/40"
+              >
+                <td class="px-3 py-4 font-medium text-heading">
+                  {{ admin.full_name || "—" }}
+                  <span
+                    v-if="admin.id === currentUser?.id"
+                    class="ml-1 text-xs text-muted"
+                    >(you)</span
                   >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    class="rounded-lg border px-4 py-2 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                </td>
+                <td class="px-3 py-4 text-body">{{ admin.email }}</td>
+                <td class="px-3 py-4">
+                  <span
+                    class="rounded-full px-2 py-1 text-xs font-semibold capitalize"
+                    :class="roleBadgeClass[admin.role]"
+                  >
+                    {{ admin.role.replace("_", " ") }}
+                  </span>
+                </td>
+                <td class="px-3 py-4 text-body">
+                  {{ admin.locations?.location ?? "—" }}
+                </td>
+                <td class="px-3 py-4">
+                  <span
+                    class="rounded-full px-2 py-1 text-xs font-semibold"
                     :class="
                       admin.is_active
-                        ? 'border-danger text-danger hover:bg-danger/10'
-                        : 'border-success text-success hover:bg-success/10'
+                        ? 'bg-success/10 text-success'
+                        : 'bg-danger/10 text-danger'
                     "
-                    :disabled="
-                      isToggling === admin.id || admin.id === currentUser?.id
-                    "
-                    :title="
-                      admin.id === currentUser?.id
-                        ? 'You cannot deactivate your own account'
-                        : ''
-                    "
-                    @click="toggleActive(admin)"
                   >
-                    {{ admin.is_active ? "Deactivate" : "Reactivate" }}
-                  </button>
-                </div>
-                <span v-else class="text-xs text-muted">—</span>
-              </td>
-            </tr>
+                    {{ admin.is_active ? "Active" : "Inactive" }}
+                  </span>
+                </td>
+                <td class="px-3 py-4">
+                  <div v-if="can('manage_users')" class="flex gap-2">
+                    <button
+                      type="button"
+                      class="secondary"
+                      @click="openEdit(admin)"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      class="rounded-lg border px-4 py-2 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                      :class="
+                        admin.is_active
+                          ? 'border-danger text-danger hover:bg-danger/10'
+                          : 'border-success text-success hover:bg-success/10'
+                      "
+                      :disabled="
+                        isToggling === admin.id || admin.id === currentUser?.id
+                      "
+                      :title="
+                        admin.id === currentUser?.id
+                          ? 'You cannot deactivate your own account'
+                          : ''
+                      "
+                      @click="toggleActive(admin)"
+                    >
+                      {{ admin.is_active ? "Deactivate" : "Reactivate" }}
+                    </button>
+                  </div>
+                  <span v-else class="text-xs text-muted">—</span>
+                </td>
+              </tr>
 
-            <tr v-else>
-              <td colspan="6" class="p-10 text-center text-sm text-muted">
-                No users match the current filters.
-              </td>
-            </tr>
+              <tr v-else>
+                <td colspan="6" class="p-10 text-center text-sm text-muted">
+                  No users match the current filters.
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
