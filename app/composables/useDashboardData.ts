@@ -25,7 +25,11 @@ export function useDashboardData(
 ) {
   const supabase = useSupabaseClient<Database>();
 
-  const { data: stats, pending, error } = useLazyAsyncData<DashboardOverviewRow | null>(
+  const {
+    data: stats,
+    pending,
+    error,
+  } = useLazyAsyncData<DashboardOverviewRow | null>(
     "dashboard-overview-stats",
     async () => {
       const { data, error } = await supabase.rpc("dashboard_overview_stats", {
@@ -55,32 +59,40 @@ export function useDashboardData(
 
   // Note: doesn't take filter_location_id — only meaningful when unfiltered
   // (see showLocationBreakdown below), so it isn't in the watch list either.
-  const { data: locationBreakdown, pending: locationBreakdownPending } = useLazyAsyncData<LocationBreakdownRow[]>(
-    "dashboard-location-breakdown",
-    async () => {
-      const { data, error } = await supabase.rpc("dashboard_location_breakdown", {
-        range_start: range.value.start.toISOString(),
-        range_end: range.value.end.toISOString(),
-      });
-      if (error) throw error;
-      return data ?? [];
-    },
-    { watch: [range] },
-  );
+  const { data: locationBreakdown, pending: locationBreakdownPending } =
+    useLazyAsyncData<LocationBreakdownRow[]>(
+      "dashboard-location-breakdown",
+      async () => {
+        const { data, error } = await supabase.rpc(
+          "dashboard_location_breakdown",
+          {
+            range_start: range.value.start.toISOString(),
+            range_end: range.value.end.toISOString(),
+          },
+        );
+        if (error) throw error;
+        return data ?? [];
+      },
+      { watch: [range] },
+    );
 
-  const { data: workspaceBreakdown, pending: workspaceBreakdownPending } = useLazyAsyncData<WorkspaceBreakdownRow[]>(
-    "dashboard-workspace-breakdown",
-    async () => {
-      const { data, error } = await supabase.rpc("dashboard_workspace_breakdown", {
-        range_start: range.value.start.toISOString(),
-        range_end: range.value.end.toISOString(),
-        filter_location_id: filterLocationId.value ?? undefined,
-      });
-      if (error) throw error;
-      return data ?? [];
-    },
-    { watch: [range, filterLocationId] },
-  );
+  const { data: workspaceBreakdown, pending: workspaceBreakdownPending } =
+    useLazyAsyncData<WorkspaceBreakdownRow[]>(
+      "dashboard-workspace-breakdown",
+      async () => {
+        const { data, error } = await supabase.rpc(
+          "dashboard_workspace_breakdown",
+          {
+            range_start: range.value.start.toISOString(),
+            range_end: range.value.end.toISOString(),
+            filter_location_id: filterLocationId.value ?? undefined,
+          },
+        );
+        if (error) throw error;
+        return data ?? [];
+      },
+      { watch: [range, filterLocationId] },
+    );
 
   const { data: upcomingBookings } = useLazyAsyncData<UpcomingBooking[]>(
     "upcoming-bookings",
@@ -113,21 +125,32 @@ export function useDashboardData(
   );
 
   const revenueDelta = computed(() =>
-    stats.value ? delta(stats.value.total_revenue, stats.value.prior_total_revenue) : null,
+    stats.value
+      ? delta(stats.value.total_revenue, stats.value.prior_total_revenue)
+      : null,
   );
   const bookingDelta = computed(() =>
-    stats.value ? delta(stats.value.booking_count, stats.value.prior_booking_count) : null,
+    stats.value
+      ? delta(stats.value.booking_count, stats.value.prior_booking_count)
+      : null,
   );
   const avgValueDelta = computed(() =>
     stats.value
-      ? delta(stats.value.avg_booking_value, stats.value.prior_avg_booking_value)
+      ? delta(
+          stats.value.avg_booking_value,
+          stats.value.prior_avg_booking_value,
+        )
       : null,
   );
   const cancelledDelta = computed(() =>
-    stats.value ? delta(stats.value.cancelled_count, stats.value.prior_cancelled_count) : null,
+    stats.value
+      ? delta(stats.value.cancelled_count, stats.value.prior_cancelled_count)
+      : null,
   );
   const noShowDelta = computed(() =>
-    stats.value ? delta(stats.value.no_show_count, stats.value.prior_no_show_count) : null,
+    stats.value
+      ? delta(stats.value.no_show_count, stats.value.prior_no_show_count)
+      : null,
   );
 
   const allZero = computed(() => {
@@ -145,115 +168,146 @@ export function useDashboardData(
   const chartSeries = computed(() => [
     {
       name: "Revenue",
-      data: (trend.value ?? []).map((r) => ({ x: new Date(r.day).getTime(), y: r.revenue })),
+      data: (trend.value ?? []).map((r) => ({
+        x: new Date(r.day).getTime(),
+        y: r.revenue,
+      })),
     },
   ]);
 
-const chartOptions = computed(() => ({
-  chart: {
-    type: "line",
-    toolbar: {
-      show: false,
-    },
-    zoom: {
-      enabled: false,
-    },
-    background: "transparent",
-    fontFamily: "Nunito, system-ui, sans-serif",
-  },
-
-  colors: ["var(--color-primary-hover)"],
-
-  stroke: {
-    curve: "smooth",
-    width: 2,
-  },
-
-  markers: {
-    size: 0,
-    hover: {
-      size: 5,
-    },
-  },
-
-  grid: {
-    borderColor: "var(--color-border)",
-    strokeDashArray: 4,
-    xaxis: {
-      lines: {
+  const chartOptions = computed(() => ({
+    chart: {
+      type: "line",
+      toolbar: {
         show: false,
       },
+      zoom: {
+        enabled: false,
+      },
+      background: "transparent",
+      fontFamily: "Nunito, system-ui, sans-serif",
     },
-  },
 
-  xaxis: {
-    type: "datetime",
+    colors: ["var(--color-primary-hover)"],
 
-    labels: {
-      format: "MMM d",
-      style: {
-        colors: "var(--color-muted)",
-        fontSize: "12px",
-        fontWeight: 500,
-        fontFamily: "Nunito, system-ui, sans-serif",
+    stroke: {
+      curve: "smooth",
+      width: 2,
+    },
+
+    markers: {
+      size: 0,
+      hover: {
+        size: 5,
       },
     },
 
-    axisBorder: {
-      color: "var(--color-border)",
+    grid: {
+      borderColor: "var(--color-border)",
+      strokeDashArray: 4,
+      xaxis: {
+        lines: {
+          show: false,
+        },
+      },
     },
 
-    axisTicks: {
-      color: "var(--color-border)",
+    xaxis: {
+      title: {
+        text: "Date",
+        style: {
+          color: "var(--color-muted)",
+        },
+      },
+
+      type: "datetime",
+
+      labels: {
+        format: "MMM d",
+        style: {
+          colors: "var(--color-muted)",
+          fontSize: "12px",
+          fontWeight: 500,
+          fontFamily: "Nunito, system-ui, sans-serif",
+        },
+      },
+
+      axisBorder: {
+        color: "var(--color-border)",
+      },
+
+      axisTicks: {
+        color: "var(--color-border)",
+      },
+
+      tooltip: {
+        enabled: false,
+      },
+    },
+
+    yaxis: {
+      title: {
+        text: "Revenue (₦)",
+        style: {
+          color: "var(--color-muted)",
+        },
+      },
+
+      labels: {
+        formatter: (val: number) => compactCurrencyFormatter.format(val),
+
+        style: {
+          colors: "var(--color-muted)",
+          fontSize: "12px",
+          fontWeight: 500,
+          fontFamily: "Nunito, system-ui, sans-serif",
+        },
+      },
     },
 
     tooltip: {
-      enabled: false,
-    },
-  },
+      theme: "dark",
 
-  yaxis: {
-    labels: {
-      formatter: (val: number) => compactCurrencyFormatter.format(val),
+      x: {
+        format: "MMM d yyyy",
+      },
 
-      style: {
-        colors: "var(--color-muted)",
-        fontSize: "12px",
-        fontWeight: 500,
-        fontFamily: "Nunito, system-ui, sans-serif",
+      y: {
+        formatter: (val: number) => compactCurrencyFormatter.format(val),
       },
     },
-  },
 
-  tooltip: {
-    theme: "dark",
+    noData: {
+      text: "No revenue data for this period",
+      align: "center",
+      verticalAlign: "middle",
 
-    x: {
-      format: "MMM d yyyy",
+      style: {
+        color: "var(--color-muted)",
+        fontFamily: "Nunito, system-ui, sans-serif",
+        fontSize: "14px",
+      },
     },
-
-    y: {
-      formatter: (val: number) => compactCurrencyFormatter.format(val),
-    },
-  },
-
-  noData: {
-    text: "No revenue data for this period",
-    align: "center",
-    verticalAlign: "middle",
-
-    style: {
-      color: "var(--color-muted)",
-      fontFamily: "Nunito, system-ui, sans-serif",
-      fontSize: "14px",
-    },
-  },
-}));
+  }));
   return {
-    stats, pending, error, allZero,
-    trend, trendPending, chartSeries, chartOptions, locationBreakdownPending,
-    locationBreakdown, workspaceBreakdownPending, workspaceBreakdown, showLocationBreakdown,
+    stats,
+    pending,
+    error,
+    allZero,
+    trend,
+    trendPending,
+    chartSeries,
+    chartOptions,
+    locationBreakdownPending,
+    locationBreakdown,
+    workspaceBreakdownPending,
+    workspaceBreakdown,
+    showLocationBreakdown,
     upcomingBookings,
-    revenueDelta, bookingDelta, avgValueDelta, cancelledDelta, noShowDelta,
+    revenueDelta,
+    bookingDelta,
+    avgValueDelta,
+    cancelledDelta,
+    noShowDelta,
   };
 }
