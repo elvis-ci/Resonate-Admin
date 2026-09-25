@@ -26,7 +26,7 @@
         <AdminSidebar @close="closeSidebar" />
       </div>
 
-      <main class="space-y-6 px-4 py-6">
+      <main class="space-y-6 px-4 py-6 max-w-screen">
         <button
           type="button"
           class="inline-flex items-center gap-2 rounded-lg border border-border bg-card-bg px-3 py-2 text-sm font-bold text-body shadow-sm transition-colors hover:border-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/40 lg:hidden"
